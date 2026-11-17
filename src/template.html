@@ -2,7 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Splitword">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="Cut the number. Find the word. A daily puzzle with Kid, Regular and Expert levels.">
 <meta name="theme-color" content="#f3f5fa">
 <title>Splitword</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,10 +56,10 @@ svg { display: block; }
 .hidden { display: none !important; }
 
 /* ---------- screens ---------- */
-.screen { max-width: 500px; margin: 0 auto; padding: 0 16px 40px; }
+.screen { max-width: 500px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 
 /* home */
-#home { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 22px; text-align: center; padding-top: 32px; }
+#home { padding-top: calc(32px + env(safe-area-inset-top)) !important; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 22px; text-align: center; padding-top: 32px; }
 .hero-board { width: min(340px, 100%); padding: 20px 10px 16px; background: var(--card); border-radius: 22px; box-shadow: var(--shadow); }
 .home-title { margin: 0; font: 800 40px/1 var(--display); letter-spacing: -0.05em; }
 .home-tag { margin: -8px 0 0; color: var(--muted); font-size: 18px; text-wrap: balance; }
@@ -71,8 +79,13 @@ svg { display: block; }
 .lv-go { background: var(--ink); color: var(--paper); font-weight: 800; font-size: 14px; padding: 8px 14px; border-radius: 999px; }
 .lv-done { color: var(--good); font: 800 15px/1 var(--display); }
 .lv-miss { color: var(--muted); font-weight: 700; font-size: 13px; }
+.install { display: flex; align-items: center; gap: 12px; width: min(360px, 100%); background: var(--card); border-radius: 16px; padding: 12px 14px; box-shadow: var(--shadow); text-align: left; font-size: 14px; }
+.install img { width: 40px; height: 40px; border-radius: 10px; }
+.install div { flex: 1; } .install b { display: block; }
+.install .btn { padding: 8px 14px; font-size: 14px; border-radius: 999px; }
+.install .x { background: none; border: 0; color: var(--muted); font-size: 20px; padding: 4px; }
 /* top bar */
-.topbar { position: sticky; top: 0; z-index: 5; background: var(--paper); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 10px 0; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--paper); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: calc(10px + env(safe-area-inset-top)) 0 10px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
 .topbar .mark { font: 800 18px/1 var(--display); letter-spacing: -0.04em; display: flex; align-items: center; gap: 4px; justify-self: center; }
 .topbar .mark i { width: 3px; height: 18px; border-radius: 2px; background: var(--cut); transform: rotate(12deg); }
 .icons { display: flex; gap: 2px; justify-self: end; }
@@ -154,7 +167,7 @@ svg { display: block; }
 /* ---------- modals ---------- */
 .mbg { position: fixed; inset: 0; z-index: 20; background: rgba(8,12,24,.5); display: none; align-items: flex-end; justify-content: center; }
 .mbg.open { display: flex; }
-.modal { background: var(--paper); width: 100%; max-width: 520px; max-height: 92%; overflow-y: auto; border-radius: 24px 24px 0 0; padding: 10px 18px 30px; display: flex; flex-direction: column; gap: 16px; }
+.modal { background: var(--paper); width: 100%; max-width: 520px; max-height: 92%; overflow-y: auto; border-radius: 24px 24px 0 0; padding: 10px 18px calc(30px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 16px; }
 @media (min-width: 640px) { .mbg { align-items: center; } .modal { border-radius: 24px; } }
 .mhead { display: flex; justify-content: space-between; align-items: center; position: sticky; top: -10px; background: var(--paper); padding: 8px 0 4px; z-index: 1; }
 .mhead h2 { margin: 0; font: 800 20px/1.2 var(--display); letter-spacing: -0.03em; }
@@ -245,6 +258,7 @@ th { color: var(--muted); font-weight: 700; }
   <div class="home-actions">
     <button class="btn big" id="hRush">Rush · 60 seconds</button>
   </div>
+  <div class="install hidden" id="installBox"><img src="icons/icon-192.png" alt=""><div><b>Get the app</b><span class="muted" id="installText">Add Splitword to your home screen.</span></div><button class="btn primary hidden" id="installBtn">Install</button><button class="x" id="installX" aria-label="Dismiss">×</button></div>
   <div class="home-links"><button class="textlink" id="hHelp">How to play</button><button class="textlink" id="hStats">Stats</button><button class="textlink" id="hSettings">Settings</button></div>
 </section>
 
@@ -353,6 +367,7 @@ th { color: var(--muted); font-weight: 700; }
       <div class="row"><label>Wrong-check penalty<span class="sub">Seconds added per wrong check</span></label><div class="seg" id="segPen"></div></div>
       <button class="btn" id="resetLevel">Reset this level to its defaults</button>
       <p class="muted small" id="testNote"></p>
+      <div class="row"><label>Don't count this device<span class="sub">Keeps your own testing out of the analytics</span></label><button class="switch" role="switch" id="swNoTrack" aria-label="Don't count this device"></button></div>
       <div class="sect">Puzzles</div>
       <div class="btnrow"><button class="btn" id="newPractice">New practice puzzle</button><button class="btn" id="replayDaily">Replay today's</button></div>
       <div class="sect">Test log</div>
@@ -367,6 +382,7 @@ th { color: var(--muted); font-weight: 700; }
 <script>
 const WORDS = __WORDS__;
 const SITE = 'https://ecfritz33-sys.github.io/Splitword/';
+const GC_CODE = ''; // GoatCounter site code, e.g. 'splitword'. Empty = analytics off.
 const DICT = new Set([...WORDS.daily, ...WORDS.rush]);
 const $ = id => document.getElementById(id);
 const store = {
@@ -596,7 +612,7 @@ function shareText() {
   const head = P.kind === 'daily' ? `Splitword No. ${dayNo()}` : 'Splitword practice';
   const pk = (S.peeks && !S.live ? ` · ${P.peeksUsed} ${P.peeksUsed === 1 ? 'peek' : 'peeks'}` : '') + ` · ${P.attempts.length} ${P.attempts.length === 1 ? 'check' : 'checks'}`;
   const lines = P.attempts.map(a => a.win ? '🟩'.repeat(Math.max(1, a.cuts.length)) : '🟨'.repeat(a.right) + '⬜'.repeat(a.cuts.length - a.right));
-  return `${head} · ${P.level || levelName()}\n${P.won ? 'Cracked in' : 'Missed after'} ${fmtTime(P.elapsed)} · ${P.cutsPlaced} cuts${pk}\n${lines.join('\n')}\n${SITE}`;
+  return `${head} · ${P.level || levelName()}\n${P.won ? 'Cracked in' : 'Missed after'} ${fmtTime(P.elapsed)} · ${P.cutsPlaced} cuts${pk}\n${lines.join('\n')}\n${SITE}?s=1`;
 }
 let cdT;
 function openResult() {
@@ -616,6 +632,7 @@ function openResult() {
     ${P.kind === 'daily' ? otherLevelsHTML() : ''}`;
   $('shareBtn').onclick = async () => {
     const txt = shareText();
+    trackLevel('share');
     try { await navigator.clipboard.writeText(txt); toast('Result copied. Paste it anywhere.', 'good'); } catch (e) { toast('Copying is blocked here.'); }
   };
   document.querySelectorAll('#resultBody [data-level]').forEach(b => b.onclick = () => { closeModals(); playLevel(b.dataset.level); });
@@ -634,6 +651,8 @@ function finish(won, wonWord) {
   P.done = true; P.won = won; P.wonWord = wonWord; P.elapsed = Date.now() - P.start + P.pen * 1000; P.level = levelName();
   if (won) P.cuts = [...cutsOf(wonWord)];
   logResult(P.kind === 'daily' ? 'Daily' : 'Practice', P.word, won ? 'Solved' : 'Missed', P.attempts.length, P.cutsPlaced, P.elapsed, null, S.peeks && !S.live ? P.peeksUsed : '–');
+  if (won) { trackLevel('solve'); trackLevel(`time-${timeBucket(Math.round(P.elapsed / 1000))}`); if (!P.attempts.some(a => !a.win)) trackLevel('solve-first-check'); }
+  else trackLevel('reveal');
   if (P.kind === 'daily') {
     store.set(savedKey(), { word: P.word, wonWord, won, cuts: P.cutsPlaced, time: P.elapsed, attempts: P.attempts, peeks: P.peeksUsed, pen: P.pen, level: P.level });
     recordStats(won, P.elapsed);
@@ -701,7 +720,7 @@ $('dReveal').onclick = () => {
 };
 $('dPeek').onclick = () => {
   if (P.done || P.peeking || P.peeksUsed >= S.peeks) return;
-  P.peeksUsed++; P.peeking = true; renderDaily();
+  P.peeksUsed++; P.peeking = true; renderDaily(); trackLevel('peek');
   setTimeout(() => { if (P) { P.peeking = false; if (!P.done) renderDaily(); } }, 2500);
 };
 setInterval(() => { const c = $('dClock'); if (c && P && !P.done) c.textContent = fmtTime(Date.now() - P.start + P.pen * 1000); }, 1000);
@@ -718,6 +737,7 @@ function renderRush(solved) {
 }
 function rushStart() {
   R = { score: 0, no: 0, cuts: [], cutsPlaced: 0, skips: 0, end: Date.now() + 60000, lock: false };
+  track('rush-start');
   $('rStart').classList.add('hidden'); $('rPlay').classList.remove('hidden');
   rushNext(); R.timer = setInterval(rushTick, 200); rushTick();
 }
@@ -731,6 +751,7 @@ function rushEnd() {
   clearInterval(R.timer);
   const best = Math.max(store.get('sw-rush-best', 0), R.score), isBest = R.score > store.get('sw-rush-best', 0) && R.score > 0;
   store.set('sw-rush-best', best); store.set('sw-rush-last', R.score);
+  track('rush-finish'); track(`rush-score-${R.score < 3 ? '0-2' : R.score < 6 ? '3-5' : R.score < 10 ? '6-9' : '10-plus'}`);
   logResult('Rush', '–', `${R.score} solved`, R.no, R.cutsPlaced, 60000, `${R.skips} skipped`, '–');
   $('rBest').textContent = best; $('rLast').textContent = R.score;
   $('rushBody').innerHTML = `<div class="trio" style="grid-template-columns:1fr 1fr"><div><b>${R.score}</b><span>Words solved</span></div><div><b>${best}</b><span>${isBest ? 'New best!' : 'Your best'}</span></div></div>
@@ -776,7 +797,7 @@ function levelStatus(l) {
   return `<span class="lv-go">Play</span>`;
 }
 function playLevel(l) {
-  setLevel(l); startDaily(false);
+  setLevel(l); startDaily(false); trackLevel('start');
   if (!store.get('sw-seen-help', false)) { store.set('sw-seen-help', true); show('daily'); openModal('mHelp'); return; }
   show('daily');
 }
@@ -843,6 +864,7 @@ function renderSettings() {
   seg('segTheme', 'theme', [['system', 'Auto'], ['light', 'Light'], ['dark', 'Dark']], v => { THEME = v; store.set('sw-theme', v); applyTheme(); renderSettings(); });
   seg('segLevel', 'level', LEVEL_KEYS.map(k => [k, LEVELS[k].name]), v => { setLevel(v); startDaily(false); renderSettings(); renderHome(); });
   $('testNote').textContent = isTest(LEVEL) ? `${LEVELS[LEVEL].name} is using test settings. Its games won't count toward stats and show as "(test)".` : `${LEVELS[LEVEL].name} is on its standard settings.`;
+  $('swNoTrack').setAttribute('aria-checked', !!NOTRACK()); $('swNoTrack').onclick = () => { store.set('sw-notrack', !NOTRACK()); renderSettings(); };
   sw('swLive', 'live'); sw('swLen', 'showLen'); sw('swHard', 'hard'); sw('swReal', 'real');
   seg('segFb', 'fb', [['lock', 'Lock'], ['count', 'Count']]);
   seg('segSplits', 'splits', [['always', 'Always'], ['after', 'After 1st'], ['off', 'Off']]);
@@ -861,10 +883,65 @@ $('newPractice').onclick = () => { closeModals(); newPuzzle(randomWord(), 'pract
 $('replayDaily').onclick = () => { closeModals(); startDaily(true); show('daily'); };
 window.addEventListener('resize', () => { if (P && !$('daily').classList.contains('hidden')) renderDaily(); if (R) renderRush(); });
 
+/* ---------- analytics (anonymous counts only) ---------- */
+const NOTRACK = () => store.get('sw-notrack', false);
+const canTrack = () => GC_CODE && !NOTRACK() && location.protocol === 'https:' && /github\.io$|splitword/i.test(location.hostname);
+let gcQueue = [];
+function track(name, perDay = true) {
+  if (!canTrack()) return;
+  if (perDay) { const k = 'sw-ev-' + todayKey(), seen = store.get(k, []); if (seen.includes(name)) return; seen.push(name); store.set(k, seen); }
+  const send = () => window.goatcounter.count({ path: name, title: name, event: true });
+  if (window.goatcounter && window.goatcounter.count) send(); else gcQueue.push(send);
+}
+function initAnalytics() {
+  if (!canTrack()) return;
+  window.goatcounter = { no_onload: true };
+  const s = document.createElement('script'); s.async = true; s.src = 'https://gc.zgo.at/count.js';
+  s.dataset.goatcounter = `https://${GC_CODE}.goatcounter.com/count`;
+  s.onload = () => { gcQueue.forEach(f => { try { f(); } catch (e) {} }); gcQueue = []; };
+  document.head.appendChild(s);
+  // adoption and retention
+  const first = store.get('sw-first', null), today = todayKey();
+  if (!first) { store.set('sw-first', today); track('new-player'); }
+  else {
+    const days = Math.round((new Date(today) - new Date(first)) / 864e5);
+    track('active-returning');
+    [1, 2, 3, 7, 14, 30].forEach(d => { if (days === d) track('return-day-' + d); });
+    if (days >= 7) track('active-week2plus');
+  }
+  track('active');
+  const q = new URLSearchParams(location.search);
+  if (q.get('s')) track('arrived-from-share');
+  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) track('opened-as-app');
+}
+const timeBucket = sec => sec < 60 ? 'under-1m' : sec < 120 ? '1-2m' : sec < 180 ? '2-3m' : sec < 300 ? '3-5m' : '5m-plus';
+const trackLevel = ev => { if (!isTest(LEVEL) && P && P.kind === 'daily') track(`${ev}-${LEVEL}`); };
+
+/* ---------- install ---------- */
+let deferredPrompt = null;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function renderInstall() {
+  const box = $('installBox');
+  if (isStandalone() || store.get('sw-install-dismissed', false) || window.self !== window.top) { box.classList.add('hidden'); return; }
+  if (deferredPrompt) { $('installText').textContent = 'Play from your home screen, even offline.'; $('installBtn').classList.remove('hidden'); box.classList.remove('hidden'); }
+  else if (isIOS()) { $('installText').textContent = 'In Safari, tap Share, then "Add to Home Screen".'; $('installBtn').classList.add('hidden'); box.classList.remove('hidden'); }
+  else box.classList.add('hidden');
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; renderInstall(); });
+window.addEventListener('appinstalled', () => { track('installed', false); deferredPrompt = null; renderInstall(); });
+$('installBtn').onclick = async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); try { await deferredPrompt.userChoice; } catch (e) {} deferredPrompt = null; renderInstall(); };
+$('installX').onclick = () => { store.set('sw-install-dismissed', true); renderInstall(); };
+if ('serviceWorker' in navigator && location.protocol === 'https:' && window.self === window.top) {
+  try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+}
+
 /* ---------- boot ---------- */
 renderBoard($('heroBoard'), { num: '191612920', cuts: [1, 3, 5, 6], live: true, static: true });
 startDaily(false);
 renderHome();
+renderInstall();
+initAnalytics();
 </script>
 </body>
 </html>
