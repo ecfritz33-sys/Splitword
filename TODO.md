@@ -23,7 +23,7 @@ Owner: **Evan** = you, **Claude** = me. Checked items are done.
 - [ ] Collect tester feedback on fun, confusion points and bugs (Evan)
 
 ## Name and brand
-- [ ] Pick the final name. Finalists: Split/Word (favorite, but close to Splitwise), Snip/Word (safer), Divisible (clever, sounds math-y; try divisible.game). Ask testers to rank; checked and ruled out: Splyt, Divvy, Splice, Snipit, Parsle (Evan)
+- [ ] Pick the final name. Finalists: Split/Word (favorite, close to Splitwise), 26 Cuts or 26 Snips (hits numbers + letters + cutting; check tone with parents/teachers), Snip/Word (safe), Divisible (clever, sounds math-y; try divisible.game). Ask testers to rank. Ruled out: Splyt, Divvy, Splice, Snipit, Parsle, Parse It, Word/Count, Word Chop, Fracture (Evan)
 - [ ] Check the .com is available at domains.cloudflare.com (Evan)
 - [ ] Rename everywhere in the game and redo the icon (Claude)
 - [ ] Trademark search or lawyer opinion before filing; USPTO filing is $350 per class (Evan)
