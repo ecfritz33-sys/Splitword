@@ -23,7 +23,7 @@ Owner: **Evan** = you, **Claude** = me. Checked items are done.
 - [ ] Collect tester feedback on fun, confusion points and bugs (Evan)
 
 ## Name and brand
-- [ ] Pick the final name. Shortlist: Snipword, Twentysix, Numberword. "Splitword" is close to Splitwise (Evan)
+- [ ] Pick the final name. Finalists: Split/Word (favorite, but close to Splitwise) vs Snip/Word (safer). Ask testers; checked and ruled out: Splyt, Divvy, Splice, Snipit (Evan)
 - [ ] Check the .com is available at domains.cloudflare.com (Evan)
 - [ ] Rename everywhere in the game and redo the icon (Claude)
 - [ ] Trademark search or lawyer opinion before filing; USPTO filing is $350 per class (Evan)
