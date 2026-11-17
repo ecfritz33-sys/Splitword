@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Splitword</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;600;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: one calm column; the number is the hero, the marigold cut is the only loud thing */
+  --paper: #f2f5f9;
+  --card: #ffffff;
+  --ink: #15233f;
+  --muted: #5d6a82;
+  --line: #d9e0ea;
+  --cut: #f0a400;
+  --good: #1f9a63;
+  --bad: #d4513f;
+  --soft: #e7ecf3;
+  --display: "Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1626; --card: #172137; --ink: #e8edf6; --muted: #98a4bb;
+    --line: #2a3651; --cut: #ffb31a; --good: #3cc487; --bad: #ff7a66; --soft: #1f2a43;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1626; --card: #172137; --ink: #e8edf6; --muted: #98a4bb;
+  --line: #2a3651; --cut: #ffb31a; --good: #3cc487; --bad: #ff7a66; --soft: #1f2a43;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--paper); color: var(--ink); font: 16px/1.45 var(--body); -webkit-tap-highlight-color: transparent; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--cut); outline-offset: 2px; }
+.app { max-width: 520px; margin: 0 auto; padding: 14px 16px 40px; display: flex; flex-direction: column; gap: 16px; }
+
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mark { font: 800 22px/1 var(--display); letter-spacing: -0.04em; display: flex; align-items: center; gap: 5px; }
+.mark i { display: inline-block; width: 4px; height: 24px; border-radius: 2px; background: var(--cut); transform: rotate(12deg); }
+.icon-btn { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 7px 12px; font-size: 14px; font-weight: 600; }
+
+.tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--soft); border-radius: 12px; padding: 4px; gap: 4px; }
+.tabs button { border: 0; background: transparent; padding: 9px; border-radius: 9px; font-weight: 600; color: var(--muted); }
+.tabs button[aria-selected="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+.meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 700; }
+.howto { font-size: 15px; color: var(--muted); margin: 0; text-wrap: balance; }
+
+.board { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px 10px 16px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.digits { display: flex; justify-content: center; align-items: flex-start; width: 100%; user-select: none; touch-action: manipulation; }
+.group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.group .nums { display: flex; }
+.d { font: 600 var(--dsize, 34px)/1 var(--display); width: var(--dw, 30px); text-align: center; padding: 8px 0; border: 0; background: transparent; position: relative; border-radius: 6px; }
+.d.hid { color: var(--cut); text-decoration: underline dotted; text-underline-offset: 6px; }
+.d.hid.empty { color: var(--muted); }
+.d.hid.dl { color: var(--good); text-decoration: none; }
+.d.miss::after { content: ""; position: absolute; right: -2px; bottom: 2px; width: 5px; height: 5px; border-radius: 50%; background: var(--bad); }
+.letter { font: 700 18px/1 var(--body); min-height: 22px; min-width: 22px; text-align: center; color: var(--ink); letter-spacing: .02em; }
+.letter.bad { color: var(--bad); }
+.letter.blank { color: var(--line); }
+.group .nums { border-bottom: 2px solid var(--line); padding-bottom: 2px; }
+.group.bad .nums { border-color: var(--bad); }
+.cut { width: 4px; align-self: stretch; margin: 2px 3px 26px; border-radius: 2px; background: var(--cut); transform: rotate(10deg); transition: transform .15s; }
+.cut.locked { background: var(--good); transform: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .cut.new { animation: snip .18s ease-out; }
+  @keyframes snip { from { transform: rotate(40deg) scaleY(.4); opacity: .3; } }
+  .shake { animation: shake .3s; }
+  @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+}
+.status { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; font-size: 13px; }
+.pill { background: var(--soft); border-radius: 999px; padding: 4px 10px; color: var(--muted); font-weight: 600; }
+.pill b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.msg { min-height: 22px; font-size: 14px; color: var(--bad); text-align: center; font-weight: 600; }
+.msg.ok { color: var(--good); }
+
+.actions { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 10px; }
+.actions.two { grid-template-columns: 1fr 1.4fr; }
+.btn { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 13px 10px; font-weight: 700; }
+.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn:disabled { opacity: .4; cursor: default; }
+
+.keystrip { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; font-size: 11px; text-align: center; }
+.keystrip span { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 3px 0; line-height: 1.15; }
+.keystrip b { display: block; font-size: 13px; }
+.keystrip em { font-style: normal; color: var(--muted); font-family: var(--display); font-size: 10px; }
+.linkish { background: none; border: 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; font-size: 14px; padding: 0; justify-self: start; }
+
+.history { display: flex; flex-direction: column; gap: 8px; }
+.hrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.hrow .split { font-family: var(--display); font-size: 13px; overflow-wrap: anywhere; }
+.hrow .split s { text-decoration: none; color: var(--cut); font-weight: 800; padding: 0 2px; }
+.hrow .word { color: var(--muted); font-weight: 600; letter-spacing: .06em; font-size: 13px; }
+.pips { display: flex; gap: 3px; flex-shrink: 0; }
+.pips i { width: 8px; height: 16px; border-radius: 2px; background: var(--line); }
+.pips i.g { background: var(--good); }
+.pips i.r { background: var(--bad); }
+.fb { font-size: 12px; color: var(--muted); text-align: right; flex-shrink: 0; }
+
+.result { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px; text-align: center; }
+.result h2 { margin: 0; font: 800 26px/1.1 var(--display); letter-spacing: -0.03em; text-wrap: balance; }
+.result .big { font: 800 30px/1 var(--display); letter-spacing: .12em; color: var(--good); }
+.result .big.lost { color: var(--bad); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stats div { background: var(--soft); border-radius: 12px; padding: 10px 4px; }
+.stats b { display: block; font: 700 22px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.stats span { font-size: 12px; color: var(--muted); }
+.small { font-size: 13px; color: var(--muted); }
+
+.rush-top { display: flex; align-items: center; gap: 12px; }
+.timerbar { flex: 1; height: 10px; background: var(--soft); border-radius: 999px; overflow: hidden; }
+.timerbar div { height: 100%; background: var(--cut); width: 100%; transition: width .2s linear; }
+.rush-top .t { font: 700 20px/1 var(--display); font-variant-numeric: tabular-nums; min-width: 44px; text-align: right; }
+.rush-score { font: 800 15px/1 var(--body); }
+
+/* settings sheet */
+.sheet-bg { position: fixed; inset: 0; background: rgba(10,16,30,.45); display: none; align-items: flex-end; justify-content: center; z-index: 10; }
+.sheet-bg.open { display: flex; }
+.sheet { background: var(--paper); width: 100%; max-width: 560px; max-height: 92%; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 18px 16px 28px; display: flex; flex-direction: column; gap: 16px; }
+.sheet h3 { margin: 0; font: 800 18px/1.2 var(--display); }
+.sheet h4 { margin: 4px 0 0; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.row label { font-weight: 600; font-size: 15px; }
+.row .sub { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+.seg { display: inline-flex; background: var(--soft); border-radius: 9px; padding: 3px; gap: 2px; flex-wrap: wrap; justify-content: flex-end; }
+.seg button { border: 0; background: transparent; padding: 6px 9px; border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+.presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.presets button { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 10px 6px; font-weight: 700; }
+.presets button[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.presets span { display: block; font-size: 11px; font-weight: 500; color: var(--muted); }
+.switch { width: 46px; height: 28px; border-radius: 999px; border: 0; background: var(--line); position: relative; flex-shrink: 0; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: left .15s; }
+.switch[aria-checked="true"] { background: var(--good); }
+.switch[aria-checked="true"]::after { left: 21px; }
+.logwrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 8px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--muted); font-weight: 600; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.btnrow .btn { flex: 1; padding: 10px; font-size: 14px; }
+.hidden { display: none !important; }
+.btn.peek { padding: 8px 16px; font-size: 14px; border-radius: 999px; border-color: var(--cut); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="mark" aria-label="Splitword">Split<i></i>word</div>
+    <button class="icon-btn" id="openSettings">Test settings</button>
+  </header>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabDaily" aria-selected="true">Daily</button>
+    <button role="tab" id="tabRush" aria-selected="false">Rush</button>
+  </div>
+
+  <!-- DAILY -->
+  <section id="daily" style="display:flex;flex-direction:column;gap:14px">
+    <div class="meta"><span id="dTitle"></span><span id="dLen"></span></div>
+    <p class="howto">Tap between digits to cut the number into letters. Each piece is one letter, A=1 to Z=26.<span id="hidHow"></span></p>
+    <div class="board" id="dBoard">
+      <div class="digits" id="dDigits"></div>
+      <div class="status" id="dStatus"></div>
+      <button class="btn peek hidden" id="dPeek"></button>
+    </div>
+    <div class="msg" id="dMsg" role="status"></div>
+    <div class="actions" id="dActions">
+      <button class="btn" id="dUndo">Undo</button>
+      <button class="btn" id="dClear">Clear</button>
+      <button class="btn primary" id="dSubmit">Check</button>
+    </div>
+    <div id="dResult" class="result hidden"></div>
+    <button class="linkish" id="keyToggle">Show A–Z key</button>
+    <div class="keystrip hidden" id="keystrip"></div>
+    <div class="history" id="dHistory"></div>
+  </section>
+
+  <!-- RUSH -->
+  <section id="rush" class="hidden" style="flex-direction:column;gap:14px">
+    <div id="rStart" class="result">
+      <h2>Rush</h2>
+      <p class="small" style="margin:0">60 seconds. Split as many short words as you can. The word counts the moment your cuts spell it.</p>
+      <div class="stats" style="grid-template-columns:1fr 1fr"><div><b id="rBest">0</b><span>Best</span></div><div><b id="rLast">–</b><span>Last run</span></div></div>
+      <button class="btn primary" id="rGo">Start</button>
+    </div>
+    <div id="rPlay" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+      <div class="rush-top"><span class="rush-score" id="rScore">0 solved</span><div class="timerbar"><div id="rBar"></div></div><span class="t" id="rTime">60</span></div>
+      <div class="meta"><span>Word <b id="rNo">1</b></span><span id="rLen"></span></div>
+      <div class="board" id="rBoard"><div class="digits" id="rDigits"></div></div>
+      <div class="msg" id="rMsg" role="status"></div>
+      <div class="actions two"><button class="btn" id="rClear">Clear</button><button class="btn" id="rSkip">Skip word</button></div>
+    </div>
+  </section>
+</div>
+
+<!-- SETTINGS -->
+<div class="sheet-bg" id="sheetBg">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h3 id="sTitle">Test settings</h3><button class="icon-btn" id="closeSettings">Done</button></div>
+    <p class="small" style="margin:0">For playtesting only. Changing a setting restarts the current puzzle.</p>
+    <h4>Difficulty preset</h4>
+    <div class="presets" id="presets"></div>
+    <h4>Individual levers</h4>
+    <div class="row"><label for="swLive">Live letters<span class="sub">Show the letter under each piece as you cut</span></label><button class="switch" role="switch" id="swLive"></button></div>
+    <div class="row"><label for="swLen">Show word length<span class="sub">Knowing the length rules out most splits</span></label><button class="switch" role="switch" id="swLen"></button></div>
+    <div class="row"><label>Feedback<span class="sub">Lock: right cuts turn green. Count: only how many are right</span></label><div class="seg" id="segFb"></div></div>
+    <div class="row"><label>Possible splits<span class="sub">Counter of splits still in play</span></label><div class="seg" id="segSplits"></div></div>
+    <div class="row"><label>Tries<span class="sub">Checks allowed per puzzle</span></label><div class="seg" id="segTries"></div></div>
+    <div class="row"><label>Peeks<span class="sub">With live letters off: show letters for 2.5 seconds</span></label><div class="seg" id="segPeeks"></div></div>
+    <div class="row"><label>Hidden digits<span class="sub">Shown as ?, tap to cycle 1–9, 0</span></label><div class="seg" id="segHidden"></div></div>
+    <div class="row"><label for="swReal">Real words only<span class="sub">Nonsense splits don't count as tries</span></label><button class="switch" role="switch" id="swReal"></button></div>
+    <div class="row"><label for="swHard">Harder numbers<span class="sub">Pick words whose number splits many ways</span></label><button class="switch" role="switch" id="swHard"></button></div>
+    <h4>Puzzles</h4>
+    <div class="btnrow"><button class="btn" id="newPractice">New practice puzzle</button><button class="btn" id="replayDaily">Replay today's</button></div>
+    <h4>Test log</h4>
+    <div class="logwrap"><table><thead><tr><th>When</th><th>Mode</th><th>Level</th><th>Word</th><th>Result</th><th>Time</th><th>Cuts</th><th>Peeks</th><th>Tries</th></tr></thead><tbody id="logBody"></tbody></table></div>
+    <div class="btnrow"><button class="btn" id="copyLog">Copy log</button><button class="btn" id="clearLog">Clear log</button></div>
+    <div class="msg ok" id="logMsg"></div>
+  </div>
+</div>
+
+<script>
+const WORDS = __WORDS__;
+const DICT = new Set([...WORDS.daily, ...WORDS.rush]);
+const $ = id => document.getElementById(id);
+
+/* ---------- storage (best effort) ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+
+/* ---------- core logic ---------- */
+const enc = w => [...w].map(c => c.charCodeAt(0) - 96).join('');
+function cutsOf(word) { // cut after digit index
+  const s = new Set(); let p = 0;
+  [...word].forEach((c, i) => { p += String(c.charCodeAt(0) - 96).length; if (i < word.length - 1) s.add(p - 1); });
+  return s;
+}
+function allSplits(num) { // returns arrays of cut sets
+  const out = [];
+  (function go(i, cuts) {
+    if (i === num.length) { out.push(cuts.slice(0, -1)); return; }
+    if (num[i] === '0') return;
+    go(i + 1, [...cuts, i]);
+    if (i + 1 < num.length) { const v = +num.slice(i, i + 2); if (v >= 10 && v <= 26) go(i + 2, [...cuts, i + 1]); }
+  })(0, []);
+  return out;
+}
+function chunks(num, cuts) {
+  const sorted = [...cuts].sort((a, b) => a - b); const out = []; let s = 0;
+  for (const c of sorted) { out.push({ start: s, end: c, str: num.slice(s, c + 1) }); s = c + 1; }
+  out.push({ start: s, end: num.length - 1, str: num.slice(s) });
+  return out.map(ch => { const ok = ch.str[0] !== '0' && +ch.str >= 1 && +ch.str <= 26; return { ...ch, ok, letter: ok ? String.fromCharCode(96 + +ch.str) : '?' }; });
+}
+const splitCount = w => allSplits(enc(w)).length;
+const HARD = WORDS.daily.filter(w => splitCount(w) >= 20);
+
+/* ---------- settings ---------- */
+const PRESETS = {
+  easy:   { live: true,  showLen: true,  fb: 'lock',  splits: 'always', tries: 6, hard: false, hidden: 0, real: false, peeks: 0 },
+  medium: { live: true,  showLen: false, fb: 'count', splits: 'after',  tries: 6, hard: false, hidden: 0, real: false, peeks: 0 },
+  hard:   { live: false, showLen: false, fb: 'count', splits: 'off',    tries: 4, hard: true,  hidden: 0, real: false, peeks: 0 },
+  expert: { live: false, showLen: false, fb: 'count', splits: 'off',    tries: 6, hard: true,  hidden: 2, real: true,  peeks: 3 }
+};
+const PRESET_NOTES = { easy: 'Letters, length, locks', medium: 'No length, count only', hard: 'No letters, 4 tries', expert: '2 hidden digits, 3 peeks' };
+let S = Object.assign({ preset: 'easy' }, PRESETS.easy, store.get('sw-settings', {}));
+if (S.hidden === undefined) S.hidden = 0; if (S.real === undefined) S.real = false; if (S.peeks === undefined) S.peeks = 0;
+function levelName() { return S.preset === 'custom' ? 'Custom' : S.preset[0].toUpperCase() + S.preset.slice(1); }
+
+/* ---------- daily puzzle ---------- */
+const EPOCH = Date.UTC(2026, 10, 1);
+function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function dayNo() { const d = new Date(); return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - EPOCH) / 864e5) + 1; }
+function hash(n) { let x = n * 2654435761 % 4294967296; x ^= x >>> 13; x = x * 1597334677 % 4294967296; return x >>> 0; }
+function dailyWord() { const pool = S.hard ? HARD : WORDS.daily; return pool[hash(dayNo() + 7) % pool.length]; }
+function randomWord() { const pool = S.hard ? HARD : WORDS.daily; return pool[Math.floor(Math.random() * pool.length)]; }
+
+let P; // current daily/practice puzzle state
+function pickHidden(word, num, k) {
+  if (!k) return [];
+  let seed = [...word].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0;
+  const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+  for (let tries = 0; tries < 50; tries++) {
+    const pick = [];
+    while (pick.length < k) { const i = Math.floor(rnd() * num.length); if (!pick.includes(i)) pick.push(i); }
+    pick.sort((a, b) => a - b);
+    if (pick.every((v, j) => j === 0 || v - pick[j - 1] > 1)) return pick;
+  }
+  return [0];
+}
+function effNum(guess) { return [...P.num].map((d, i) => P.hidden.includes(i) ? (guess[i] ?? '?') : d).join(''); }
+function newPuzzle(word, kind) {
+  const num = enc(word);
+  P = { word, num, kind, ans: cutsOf(word), cuts: [], locked: new Set(), miss: new Set(), attempts: [], cutsPlaced: 0, start: Date.now(), done: false, won: false, fresh: null,
+        hidden: pickHidden(word, num, S.hidden), guess: {}, dlocked: new Set(), dmiss: {}, peeksUsed: 0, peeking: false };
+  $('dMsg').textContent = '';
+  renderDaily();
+}
+function startDaily(force) {
+  const saved = store.get('sw-daily-' + todayKey(), null);
+  newPuzzle(dailyWord(), 'daily');
+  if (saved && !force) { Object.assign(P, { peeksUsed: saved.peeks || 0, done: true, won: saved.won, attempts: saved.attempts || [], cutsPlaced: saved.cuts, elapsed: saved.time, cuts: [...cutsOf(saved.word || P.word)], locked: new Set() }); P.word = saved.word || P.word; P.num = enc(P.word); P.ans = cutsOf(P.word); P.hidden = []; renderDaily(); }
+}
+
+function cutAllowed(num, g) { return g >= 0 && g <= num.length - 2 && num[g + 1] !== '0'; }
+
+function boardHTML(num, cuts, locked, miss, live, freshCut, hid) {
+  hid = hid || { set: [], locked: new Set() };
+  const cs = new Set(cuts); const ch = chunks(num, cs);
+  const n = num.length;
+  const w = Math.min(34, Math.floor((Math.min(window.innerWidth, 520) - 70 - (ch.length - 1) * 10) / n));
+  const size = Math.max(18, Math.min(34, Math.round(w * 1.1)));
+  let html = '';
+  ch.forEach((c, gi) => {
+    let nums = '';
+    for (let i = c.start; i <= c.end; i++) {
+      const h = hid.set.includes(i);
+      nums += `<button class="d${miss.has(i) && !cs.has(i) ? ' miss' : ''}${h ? ' hid' : ''}${h && hid.locked.has(i) ? ' dl' : ''}${h && num[i] === '?' ? ' empty' : ''}" data-i="${i}"${h ? ' data-h="1"' : ''} aria-label="${h ? 'hidden digit, tap to change' : 'digit ' + num[i]}">${num[i]}</button>`;
+    }
+    const pending = !c.ok && (c.str.includes('?') || (c.str.length > 2 && c.str[0] !== '0'));
+    const letter = !live ? `<span class="letter blank">•</span>` : pending ? `<span class="letter blank">…</span>` : `<span class="letter${c.ok ? '' : ' bad'}">${c.ok ? c.letter.toUpperCase() : '?'}</span>`;
+    html += `<div class="group${c.ok || pending ? '' : ' bad'}"><div class="nums">${nums}</div>${letter}</div>`;
+    if (gi < ch.length - 1) html += `<span class="cut${locked.has(c.end) ? ' locked' : ''}${freshCut === c.end ? ' new' : ''}"></span>`;
+  });
+  return { html, w, size };
+}
+function paintBoard(el, num, cuts, locked, miss, live, fresh, hid) {
+  const b = boardHTML(num, cuts, locked, miss, live, fresh, hid);
+  el.innerHTML = b.html; el.style.setProperty('--dw', b.w + 'px'); el.style.setProperty('--dsize', b.size + 'px');
+}
+function gapFromEvent(e) {
+  const t = e.target.closest('.d'); if (!t) return null;
+  const i = +t.dataset.i; const r = t.getBoundingClientRect();
+  const x = (e.clientX || r.left + r.width) - r.left;
+  return x > r.width / 2 ? i : i - 1;
+}
+
+function fills() {
+  const H = P.hidden; if (!H.length) return [{}];
+  const out = [];
+  (function go(j, g) {
+    if (j === H.length) {
+      if (S.fb === 'count') for (const a of P.attempts) if (H.filter(i => a.guess[i] === g[i]).length !== a.dRight) return;
+      out.push({ ...g }); return;
+    }
+    const i = H[j];
+    for (let v = 0; v <= 9; v++) {
+      const s = String(v);
+      if (P.dlocked.has(i) && s !== P.guess[i]) continue;
+      if (P.dmiss[i] && P.dmiss[i].has(s)) continue;
+      g[i] = s; go(j + 1, g);
+    }
+  })(0, {});
+  return out;
+}
+function consistent() {
+  let total = 0;
+  for (const g of fills()) total += consistentFor(g);
+  return total;
+}
+function consistentFor(g) {
+  const L = P.word.length;
+  const str = [...P.num].map((d, i) => P.hidden.includes(i) ? g[i] : d).join('');
+  return allSplits(str).filter(cs => {
+    if (S.showLen && cs.length !== L - 1) return false;
+    const set = new Set(cs);
+    for (const l of P.locked) if (!set.has(l)) return false;
+    for (const m of P.miss) if (set.has(m)) return false;
+    for (const a of P.attempts) {
+      if (S.fb === 'count') { if (a.cuts.filter(c => set.has(c)).length !== a.right) return false; }
+      if (a.cuts.length === cs.length && a.cuts.every(c => set.has(c)) && P.hidden.every(i => a.guess[i] === g[i])) return false;
+    }
+    return true;
+  }).length;
+}
+
+function renderDaily() {
+  const L = P.word.length;
+  $('dTitle').innerHTML = P.kind === 'daily' ? `<b>Puzzle #${dayNo()}</b> · ${new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : `<b>Practice puzzle</b> · not today's`;
+  $('hidHow').textContent = P.hidden.length && !P.done ? ' Tap a ? to choose its digit.' : '';
+  $('dLen').innerHTML = S.showLen ? `<b>${L}</b> letters` : 'Length hidden';
+  paintBoard($('dDigits'), P.done ? P.num : effNum(P.guess), P.cuts, P.locked, P.miss, S.live || P.done || P.peeking, P.fresh, P.done ? null : { set: P.hidden, locked: P.dlocked }); P.fresh = null;
+  // status pills
+  const pills = [];
+  if (!P.done) pills.push(`<span class="pill"><b id="dClock">${fmtTime(Date.now() - P.start)}</b></span>`);
+  pills.push(`<span class="pill"><b>${P.cutsPlaced}</b> cuts</span>`);
+  const triesLeft = S.tries ? `<b>${Math.max(0, S.tries - P.attempts.length)}</b> of ${S.tries} tries left` : `<b>${P.attempts.length}</b> tries`;
+  pills.push(`<span class="pill">${triesLeft}</span>`);
+  if (P.hidden.length && !P.done) pills.push(`<span class="pill"><b>${P.hidden.length}</b> hidden digit${P.hidden.length > 1 ? 's' : ''}</span>`);
+  if (!P.done && (S.splits === 'always' || (S.splits === 'after' && P.attempts.length))) pills.push(`<span class="pill"><b>${consistent()}</b> possible splits</span>`);
+  $('dStatus').innerHTML = pills.join('');
+  const usePeeks = !S.live && S.peeks > 0 && !P.done;
+  $('dPeek').classList.toggle('hidden', !usePeeks);
+  if (usePeeks) { const left = S.peeks - P.peeksUsed; $('dPeek').textContent = P.peeking ? 'Peeking…' : left ? `Peek at letters · ${left} left` : 'No peeks left'; $('dPeek').disabled = P.peeking || !left; }
+  // history
+  $('dHistory').innerHTML = P.attempts.slice().reverse().map((a, idx) => {
+    const ch = chunks(P.hidden.length && !P.done ? effNum(a.guess) : (P.hidden.length ? effNum(a.guess) : P.num), new Set(a.cuts));
+    const split = ch.map(c => c.str).join('<s>|</s>');
+    const word = (S.live || P.done || P.peeking) ? ch.map(c => c.ok ? c.letter : '?').join('').toUpperCase() : '';
+    let pips = '';
+    if (S.fb === 'lock') pips = a.cuts.map(c => `<i class="${P.ans.has(c) ? 'g' : 'r'}"></i>`).join('');
+    else pips = Array.from({ length: a.right }, () => '<i class="g"></i>').join('') + Array.from({ length: a.cuts.length - a.right }, () => '<i class="r"></i>').join('');
+    const fbText = a.win ? 'Solved' : `${a.right} right · ${a.cuts.length - a.right} wrong${P.hidden.length ? ` · digits ${a.dRight}/${P.hidden.length}` : ''}`;
+    return `<div class="hrow"><div><div class="split">${split}</div>${word ? `<div class="word">${word}</div>` : ''}</div><div><div class="pips">${pips}</div><div class="fb">${fbText}</div></div></div>`;
+  }).join('');
+  // actions / result
+  $('dActions').classList.toggle('hidden', P.done);
+  $('dResult').classList.toggle('hidden', !P.done);
+  if (P.done) renderResult();
+}
+
+function fmtTime(ms) { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+function shareText() {
+  const head = P.kind === 'daily' ? `Splitword #${dayNo()}` : 'Splitword practice';
+  const lines = P.attempts.map(a => a.win ? '🟩'.repeat(Math.max(1, a.cuts.length)) : '🟨'.repeat(a.right) + '⬜'.repeat(a.cuts.length - a.right));
+  const pk = S.peeks && !S.live ? ` · ${P.peeksUsed} ${P.peeksUsed === 1 ? 'peek' : 'peeks'}` : '';
+  return `${head} · ${levelName()}\n${P.won ? 'Cracked in' : 'Missed after'} ${fmtTime(P.elapsed)} · ${P.cutsPlaced} cuts${pk}\n${lines.join('\n')}\nPlay: https://claude.ai/artifact/TA1EXxvfRqw3xMjcAdt1es`;
+}
+function renderResult() {
+  const W = P.word.toUpperCase();
+  const tomorrow = P.kind === 'daily' ? `<p class="small" style="margin:0">Next puzzle tomorrow.</p>` : `<button class="btn" id="morePractice">Another practice puzzle</button>`;
+  $('dResult').innerHTML = `
+    <h2>${P.won ? 'Cracked it' : 'Out of tries'}</h2>
+    <div class="big${P.won ? '' : ' lost'}">${P.wonWord ? P.wonWord.toUpperCase() : W}</div>
+    ${P.wonWord && P.wonWord !== P.word ? `<p class="small" style="margin:0">Also accepted. The intended word was ${W}.</p>` : ''}
+    <div class="stats"><div><b>${fmtTime(P.elapsed || 0)}</b><span>Time</span></div><div><b>${P.cutsPlaced}</b><span>Cuts</span></div>${S.peeks && !S.live ? `<div><b>${P.peeksUsed}</b><span>Peeks</span></div>` : `<div><b>${P.attempts.length}</b><span>Tries</span></div>`}</div>
+    ${S.peeks && !S.live ? `<p class="small" style="margin:0">${P.attempts.length} ${P.attempts.length === 1 ? 'try' : 'tries'}</p>` : ''}
+    <button class="btn primary" id="shareBtn">Copy result</button>
+    ${tomorrow}`;
+  $('shareBtn').onclick = async () => { try { await navigator.clipboard.writeText(shareText()); $('shareBtn').textContent = 'Copied'; } catch (e) { $('shareBtn').textContent = 'Copy not allowed here'; } };
+  const mp = $('morePractice'); if (mp) mp.onclick = () => newPuzzle(randomWord(), 'practice');
+}
+
+function finish(won, wonWord) {
+  P.done = true; P.won = won; P.wonWord = wonWord; P.elapsed = Date.now() - P.start;
+  if (won) P.cuts = [...cutsOf(wonWord)];
+  logResult(P.kind === 'daily' ? 'Daily' : 'Practice', P.word, won ? 'Solved' : 'Missed', P.attempts.length, P.cutsPlaced, P.elapsed, null, S.peeks && !S.live ? P.peeksUsed : '–');
+  if (P.kind === 'daily') store.set('sw-daily-' + todayKey(), { word: P.word, won, cuts: P.cutsPlaced, time: P.elapsed, attempts: P.attempts, peeks: P.peeksUsed });
+  $('dMsg').textContent = '';
+  renderDaily();
+}
+
+function submitDaily() {
+  if (P.done) return;
+  const L = P.word.length; const cs = new Set(P.cuts); const cur = effNum(P.guess); const ch = chunks(cur, cs);
+  const msg = $('dMsg'); msg.className = 'msg';
+  if (cur.includes('?')) { msg.textContent = 'Tap each ? to fill in its digit first.'; shake('dBoard'); return; }
+  const bad = ch.find(c => !c.ok);
+  if (bad) { msg.textContent = `${bad.str} still needs cutting. Each piece must be 1 to 26.`; shake('dBoard'); return; }
+  if (S.showLen && ch.length !== L) { msg.textContent = `Make ${L - 1} cuts for ${L} letters. You have ${cs.size}.`; shake('dBoard'); return; }
+  if (P.attempts.some(a => a.cuts.length === cs.size && a.cuts.every(c => cs.has(c)) && P.hidden.every(i => a.guess[i] === P.guess[i]))) { msg.textContent = 'You already tried that split.'; shake('dBoard'); return; }
+  const word = ch.map(c => c.letter).join('');
+  if (S.real && !DICT.has(word)) { msg.textContent = `${S.live ? word.toUpperCase() + ' is' : 'That spells something'} not in the word list. Only real words count.`; shake('dBoard'); return; }
+  const cutsArr = [...cs].sort((a, b) => a - b);
+  const right = cutsArr.filter(c => P.ans.has(c)).length;
+  const win = enc(word) === P.num && (word === P.word || (DICT.has(word) && (!S.showLen || word.length === L)));
+  const dRight = P.hidden.filter(i => P.guess[i] === P.num[i]).length;
+  P.attempts.push({ cuts: cutsArr, right, win, guess: { ...P.guess }, dRight });
+  if (win) { finish(true, word); return; }
+  if (S.fb === 'lock') {
+    cutsArr.forEach(c => P.ans.has(c) ? P.locked.add(c) : P.miss.add(c));
+    P.cuts = [...P.locked];
+    P.hidden.forEach(i => { if (P.guess[i] === P.num[i]) P.dlocked.add(i); else { (P.dmiss[i] = P.dmiss[i] || new Set()).add(P.guess[i]); delete P.guess[i]; } });
+    msg.textContent = right ? `${right} cut${right > 1 ? 's' : ''} locked in. Wrong cuts are marked with a red dot.` : 'None of those cuts were right. They are marked with red dots.';
+  } else {
+    msg.textContent = `${right} of your ${cutsArr.length} cuts ${right === 1 ? 'is' : 'are'} right.` + (P.hidden.length ? ` ${dRight} of ${P.hidden.length} hidden digits ${dRight === 1 ? 'is' : 'are'} right.` : '');
+  }
+  if (S.tries && P.attempts.length >= S.tries) { finish(false, null); return; }
+  renderDaily();
+}
+function shake(id) { const el = $(id); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+
+$('dDigits').addEventListener('click', e => {
+  if (P.done) return;
+  const t = e.target.closest('.d');
+  if (t && t.dataset.h) {
+    const i = +t.dataset.i; if (P.dlocked.has(i)) return;
+    const order = [undefined, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+    P.guess[i] = order[(order.indexOf(P.guess[i]) + 1) % order.length];
+    if (P.guess[i] === undefined) delete P.guess[i];
+    $('dMsg').textContent = ''; renderDaily(); return;
+  }
+  const g = gapFromEvent(e); if (g === null || !cutAllowed(effNum(P.guess), g) || P.locked.has(g)) return;
+  const i = P.cuts.indexOf(g);
+  if (i >= 0) P.cuts.splice(i, 1); else { P.cuts.push(g); P.cutsPlaced++; P.fresh = g; }
+  $('dMsg').textContent = '';
+  renderDaily();
+});
+$('dUndo').onclick = () => { for (let k = P.cuts.length - 1; k >= 0; k--) if (!P.locked.has(P.cuts[k])) { P.cuts.splice(k, 1); break; } renderDaily(); };
+$('dClear').onclick = () => { P.cuts = [...P.locked]; $('dMsg').textContent = ''; renderDaily(); };
+$('dSubmit').onclick = submitDaily;
+$('dPeek').onclick = () => {
+  if (P.done || P.peeking || P.peeksUsed >= S.peeks) return;
+  P.peeksUsed++; P.peeking = true; renderDaily();
+  setTimeout(() => { if (P) { P.peeking = false; if (!P.done) renderDaily(); } }, 2500);
+};
+setInterval(() => { const c = $('dClock'); if (c && P && !P.done) c.textContent = fmtTime(Date.now() - P.start); }, 1000);
+
+/* A–Z key */
+$('keystrip').innerHTML = Array.from({ length: 26 }, (_, i) => `<span><b>${String.fromCharCode(65 + i)}</b><em>${i + 1}</em></span>`).join('');
+$('keyToggle').onclick = () => { const h = $('keystrip').classList.toggle('hidden'); $('keyToggle').textContent = h ? 'Show A–Z key' : 'Hide A–Z key'; };
+
+/* ---------- Rush ---------- */
+let R = null;
+function rushWord() { return WORDS.rush[Math.floor(Math.random() * WORDS.rush.length)]; }
+function rushNext() { const w = rushWord(); R.word = w; R.num = enc(w); R.cuts = []; R.no++; renderRush(); }
+function renderRush() {
+  $('rNo').textContent = R.no; $('rLen').innerHTML = `<b>${R.word.length}</b> letters`;
+  $('rScore').textContent = `${R.score} solved`;
+  paintBoard($('rDigits'), R.num, R.cuts, new Set(), new Set(), S.live, R.fresh); R.fresh = null;
+}
+function rushStart() {
+  R = { score: 0, no: 0, cuts: [], cutsPlaced: 0, skips: 0, end: Date.now() + 60000 };
+  $('rStart').classList.add('hidden'); $('rPlay').classList.remove('hidden'); $('rMsg').textContent = '';
+  rushNext();
+  R.timer = setInterval(rushTick, 200); rushTick();
+}
+function rushTick() {
+  const left = Math.max(0, R.end - Date.now());
+  $('rTime').textContent = Math.ceil(left / 1000); $('rBar').style.width = (left / 600) + '%';
+  if (!left) rushEnd();
+}
+function rushEnd() {
+  clearInterval(R.timer);
+  const best = Math.max(store.get('sw-rush-best', 0), R.score); store.set('sw-rush-best', best); store.set('sw-rush-last', R.score);
+  logResult('Rush', '–', `${R.score} solved`, R.no, R.cutsPlaced, 60000, `${R.skips} skipped`);
+  $('rBest').textContent = best; $('rLast').textContent = R.score;
+  $('rPlay').classList.add('hidden'); $('rStart').classList.remove('hidden');
+  $('rGo').textContent = 'Play again'; R = null;
+}
+$('rDigits').addEventListener('click', e => {
+  if (!R) return;
+  const g = gapFromEvent(e); if (g === null || !cutAllowed(R.num, g)) return;
+  const i = R.cuts.indexOf(g);
+  if (i >= 0) R.cuts.splice(i, 1); else { R.cuts.push(g); R.cutsPlaced++; R.fresh = g; }
+  const ch = chunks(R.num, new Set(R.cuts));
+  const word = ch.every(c => c.ok) ? ch.map(c => c.letter).join('') : '';
+  if (word.length === R.word.length && (word === R.word || DICT.has(word))) {
+    R.score++; $('rMsg').className = 'msg ok'; $('rMsg').textContent = `${word.toUpperCase()}!`;
+    renderRush(); setTimeout(() => { if (R) { $('rMsg').textContent = ''; rushNext(); } }, 450);
+    return;
+  }
+  renderRush();
+});
+$('rClear').onclick = () => { if (R) { R.cuts = []; renderRush(); } };
+$('rSkip').onclick = () => { if (R) { R.skips++; $('rMsg').className = 'msg'; $('rMsg').textContent = `That was ${R.word.toUpperCase()}.`; rushNext(); } };
+$('rGo').onclick = rushStart;
+$('rBest').textContent = store.get('sw-rush-best', 0); const lastR = store.get('sw-rush-last', null); if (lastR !== null) $('rLast').textContent = lastR;
+
+/* ---------- tabs ---------- */
+function showTab(t) {
+  $('tabDaily').setAttribute('aria-selected', t === 'daily'); $('tabRush').setAttribute('aria-selected', t === 'rush');
+  $('daily').style.display = t === 'daily' ? 'flex' : 'none';
+  $('rush').classList.toggle('hidden', t !== 'rush'); $('rush').style.display = t === 'rush' ? 'flex' : 'none';
+}
+$('tabDaily').onclick = () => showTab('daily'); $('tabRush').onclick = () => showTab('rush');
+
+/* ---------- test log ---------- */
+function logResult(mode, word, result, tries, cuts, ms, note, peeks) {
+  const log = store.get('sw-log', []);
+  log.unshift({ when: new Date().toLocaleString(undefined, { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }), mode, level: levelName(), word: word.toUpperCase(), result: note ? `${result}, ${note}` : result, tries, cuts, peeks: peeks ?? '–', time: fmtTime(ms) });
+  store.set('sw-log', log.slice(0, 200)); renderLog();
+}
+function renderLog() {
+  const log = store.get('sw-log', []);
+  $('logBody').innerHTML = log.length ? log.map(r => `<tr><td>${r.when}</td><td>${r.mode}</td><td>${r.level}</td><td>${r.word}</td><td>${r.result}</td><td>${r.time}</td><td>${r.cuts}</td><td>${r.peeks ?? '–'}</td><td>${r.tries}</td></tr>`).join('') : `<tr><td colspan="9" class="small">No games yet. Finish a puzzle or a Rush run and it shows here.</td></tr>`;
+}
+$('copyLog').onclick = async () => {
+  const log = store.get('sw-log', []);
+  const txt = ['When\tMode\tLevel\tWord\tResult\tTime\tCuts\tPeeks\tTries', ...log.map(r => [r.when, r.mode, r.level, r.word, r.result, r.time, r.cuts, r.peeks ?? '–', r.tries].join('\t'))].join('\n');
+  try { await navigator.clipboard.writeText(txt); $('logMsg').textContent = 'Copied. Paste it into a sheet or a message.'; } catch (e) { $('logMsg').textContent = 'Copying is blocked here.'; }
+};
+$('clearLog').onclick = () => { store.set('sw-log', []); renderLog(); };
+
+/* ---------- settings UI ---------- */
+function seg(id, key, opts) {
+  $(id).innerHTML = opts.map(([v, l]) => `<button data-v="${v}" aria-pressed="${S[key] === v}">${l}</button>`).join('');
+  $(id).querySelectorAll('button').forEach(b => b.onclick = () => { const v = opts.find(o => String(o[0]) === b.dataset.v)[0]; setOpt(key, v); });
+}
+function sw(id, key) { $(id).setAttribute('aria-checked', !!S[key]); $(id).onclick = () => setOpt(key, !S[key]); }
+function setOpt(key, v) { S[key] = v; S.preset = 'custom'; for (const [k, p] of Object.entries(PRESETS)) if (Object.keys(p).every(x => p[x] === S[x])) S.preset = k; applySettings(); }
+function renderSettings() {
+  $('presets').innerHTML = Object.keys(PRESETS).map(k => `<button data-p="${k}" aria-pressed="${S.preset === k}">${k[0].toUpperCase() + k.slice(1)}<span>${PRESET_NOTES[k]}</span></button>`).join('');
+  $('presets').querySelectorAll('button').forEach(b => b.onclick = () => { Object.assign(S, PRESETS[b.dataset.p], { preset: b.dataset.p }); applySettings(); });
+  sw('swLive', 'live'); sw('swLen', 'showLen'); sw('swHard', 'hard'); sw('swReal', 'real');
+  seg('segHidden', 'hidden', [[0, 'None'], [1, '1'], [2, '2'], [3, '3']]);
+  seg('segPeeks', 'peeks', [[0, 'None'], [3, '3'], [5, '5']]);
+  seg('segFb', 'fb', [['lock', 'Lock'], ['count', 'Count']]);
+  seg('segSplits', 'splits', [['always', 'Always'], ['after', 'After 1st'], ['off', 'Off']]);
+  seg('segTries', 'tries', [[4, '4'], [6, '6'], [0, 'No limit']]);
+}
+function applySettings() {
+  store.set('sw-settings', S); renderSettings();
+  if (P.kind === 'daily') { if (!P.done) startDaily(true); else renderDaily(); } else newPuzzle(randomWord(), 'practice');
+}
+$('openSettings').onclick = () => { renderSettings(); renderLog(); $('sheetBg').classList.add('open'); };
+$('closeSettings').onclick = () => $('sheetBg').classList.remove('open');
+$('sheetBg').onclick = e => { if (e.target === $('sheetBg')) $('sheetBg').classList.remove('open'); };
+$('newPractice').onclick = () => { newPuzzle(randomWord(), 'practice'); $('sheetBg').classList.remove('open'); showTab('daily'); };
+$('replayDaily').onclick = () => { startDaily(true); $('sheetBg').classList.remove('open'); showTab('daily'); };
+window.addEventListener('resize', () => { if (P) renderDaily(); if (R) renderRush(); });
+
+startDaily(false);
+renderLog();
+</script>
+</body>
+</html>
