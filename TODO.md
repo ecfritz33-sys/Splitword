@@ -12,7 +12,7 @@ Owner: **Evan** = you, **Claude** = me. Checked items are done.
 - [x] Anonymous analytics built in, switched off until set up (Claude)
 - [ ] Sign up at goatcounter.com and send the site code (Evan)
 - [ ] Add the GoatCounter code and push (Claude)
-- [ ] Turn on "Don't count this device" on your own phones (Evan)
+- [x] Turn on "Don't count this device" on your own phones (Evan) — repeat in each browser and in the installed app
 - [ ] Replace the ~500-word list with a full dictionary of real words (Claude)
 
 ## Next: test with real players (2–3 weeks)
