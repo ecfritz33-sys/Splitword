@@ -61,6 +61,16 @@ svg { display: block; }
 .home-links { display: flex; gap: 18px; justify-content: center; }
 .textlink { background: none; border: 0; padding: 4px; color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 
+.levels { display: flex; flex-direction: column; gap: 10px; width: min(360px, 100%); }
+.lv { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 12px; align-items: center; text-align: left; background: var(--card); border: 0; border-radius: 18px; padding: 14px 16px; box-shadow: var(--shadow); border-left: 6px solid var(--line); }
+.lv-kid { border-left-color: #4cc0e8; } .lv-regular { border-left-color: var(--cut); } .lv-expert { border-left-color: var(--ink); }
+.lv-name { font: 800 18px/1.2 var(--display); letter-spacing: -0.03em; }
+.lv-name em { font: 700 10px/1 var(--body); font-style: normal; text-transform: uppercase; letter-spacing: .08em; background: var(--tile); color: var(--muted); padding: 3px 6px; border-radius: 6px; vertical-align: middle; }
+.lv-blurb { grid-row: 2; font-size: 13px; color: var(--muted); }
+.lv > span:last-child { grid-row: 1 / 3; grid-column: 2; }
+.lv-go { background: var(--ink); color: var(--paper); font-weight: 800; font-size: 14px; padding: 8px 14px; border-radius: 999px; }
+.lv-done { color: var(--good); font: 800 15px/1 var(--display); }
+.lv-miss { color: var(--muted); font-weight: 700; font-size: 13px; }
 /* top bar */
 .topbar { position: sticky; top: 0; z-index: 5; background: var(--paper); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 10px 0; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
 .topbar .mark { font: 800 18px/1 var(--display); letter-spacing: -0.04em; display: flex; align-items: center; gap: 4px; justify-self: center; }
@@ -74,14 +84,14 @@ svg { display: block; }
 .phead { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 10px 0 14px; }
 .phead .no { font-weight: 800; font-size: 15px; }
 .phead .sub { color: var(--muted); font-size: 14px; }
-.lenchip { font-size: 13px; font-weight: 700; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; color: var(--muted); }
+.lenchip { white-space: nowrap; font-size: 13px; font-weight: 700; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; color: var(--muted); }
 .lenchip b { color: var(--ink); }
 
 /* ---------- board ---------- */
 .board { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 26px 10px 18px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .pieces { display: flex; justify-content: center; align-items: flex-start; user-select: none; touch-action: manipulation; }
 .grp { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.piece { display: flex; background: var(--tile); border-radius: 12px; padding: 0 4px; transition: background .15s; }
+.piece { display: flex; background: var(--tile); border-radius: 12px; padding: 0 3px; transition: background .15s; }
 .piece.bad { background: color-mix(in srgb, var(--bad) 16%, var(--tile)); }
 .piece.solved { background: color-mix(in srgb, var(--good) 18%, var(--tile)); }
 .d { font: 700 var(--dsize, 32px)/1 var(--display); width: var(--dw, 28px); height: calc(var(--dsize, 32px) * 1.7); border: 0; background: transparent; padding: 0; position: relative; color: var(--ink); }
@@ -90,9 +100,9 @@ svg { display: block; }
 .d.hid.empty { color: var(--muted); }
 .d.hid::before { content: ""; position: absolute; left: 18%; right: 18%; bottom: 7px; border-bottom: 2px dashed currentColor; }
 .d.hid.dl { color: var(--good); }
-.cut { width: 4px; border-radius: 3px; background: var(--cut); margin: -4px 5px 0; height: calc(var(--dsize, 32px) * 1.7 + 8px); transform: rotate(13deg); }
+.cut { width: 4px; flex-shrink: 0; border-radius: 3px; background: var(--cut); margin: -4px 4px 0; height: calc(var(--dsize, 32px) * 1.7 + 8px); transform: rotate(13deg); }
 .cut.locked { background: var(--good); transform: none; }
-.lt { min-width: 30px; height: 34px; padding: 0 6px; border-radius: 9px; display: grid; place-items: center; font: 800 18px/1 var(--body); border: 1.5px solid var(--line); color: var(--ink); background: var(--card); }
+.lt { min-width: var(--ltw, 30px); height: var(--lth, 34px); padding: 0 4px; border-radius: 9px; display: grid; place-items: center; font: 800 var(--lts, 18px)/1 var(--body); border: 1.5px solid var(--line); color: var(--ink); background: var(--card); }
 .lt.empty { color: transparent; border-style: dashed; }
 .lt.wait { color: var(--muted); border-style: dashed; font-weight: 600; }
 .lt.bad { color: var(--bad); border-color: var(--bad); }
@@ -230,11 +240,11 @@ th { color: var(--muted); font-weight: 700; }
   <div class="hero-board"><div class="pieces" id="heroBoard"></div></div>
   <h1 class="home-title">Splitword</h1>
   <p class="home-tag">Cut the number. Find the word.</p>
+  <div class="home-meta"><b id="hNo"></b><span id="hDate"></span></div>
+  <div class="levels" id="levels" role="list"></div>
   <div class="home-actions">
-    <button class="btn primary big" id="hPlay">Play today's puzzle</button>
     <button class="btn big" id="hRush">Rush · 60 seconds</button>
   </div>
-  <div class="home-meta"><b id="hNo"></b><span id="hDate"></span></div>
   <div class="home-links"><button class="textlink" id="hHelp">How to play</button><button class="textlink" id="hStats">Stats</button><button class="textlink" id="hSettings">Settings</button></div>
 </section>
 
@@ -263,6 +273,7 @@ th { color: var(--muted); font-weight: 700; }
       <button class="btn" id="dClear">Clear</button>
       <button class="btn primary" id="dSubmit">Check</button>
     </div>
+    <div style="text-align:center;margin-top:10px" id="revealWrap"><button class="textlink" id="dReveal">Reveal the answer</button></div>
     <button class="btn primary big hidden" id="dShowResult" style="width:100%;margin-top:16px">See your result</button>
     <div class="key"><button class="textlink" id="keyToggle">Show A–Z key</button><div class="keygrid hidden" id="keygrid"></div></div>
     <div class="history" id="dHistory"></div>
@@ -295,9 +306,10 @@ th { color: var(--muted); font-weight: 700; }
     <li><span>1</span><div>Tap between two digits to cut. Tap the same spot again to remove the cut.</div></li>
     <li><span>2</span><div>Watch for the traps. 15 could be O, or A then E.</div></li>
     <li><span>3</span><div>A 0 never starts a letter. It always belongs to 10 (J) or 20 (T).</div></li>
-    <li><span>4</span><div>Press Check when your pieces spell a word. Your score is your time and the number of cuts you made.</div></li>
+    <li><span>4</span><div>Press Check any time. It tells you how many cuts are right, but each wrong check adds 10 seconds.</div></li>
+    <li><span>5</span><div>Your score is your time and the number of cuts you made. Fewer is better.</div></li>
   </ul>
-  <p class="muted small">A new puzzle arrives every day at midnight. Rush is there whenever you want a quick round.</p>
+  <p class="muted small">Three new puzzles arrive every day at midnight: Kid shows the letters as you cut, Regular hides one digit and gives you 3 peeks, and Expert hides two digits with no help.</p>
   <button class="btn primary big" data-close>Let's play</button>
 </div></div>
 
@@ -327,9 +339,8 @@ th { color: var(--muted); font-weight: 700; }
     <summary>Playtest controls</summary>
     <div>
       <p class="muted small">For testing only. Changing a setting restarts the current puzzle.</p>
-      <div class="sect">Difficulty</div>
-      <div class="presets" id="presets"></div>
-      <div class="sect">Individual levers</div>
+      <div class="row"><label>Level to adjust</label><div class="seg" id="segLevel"></div></div>
+      <div class="sect">Levers for this level</div>
       <div class="row"><label>Live letters<span class="sub">Show each piece's letter as you cut</span></label><button class="switch" role="switch" id="swLive" aria-label="Live letters"></button></div>
       <div class="row"><label>Peeks<span class="sub">With live letters off, show letters for 2.5 seconds</span></label><div class="seg" id="segPeeks"></div></div>
       <div class="row"><label>Show word length<span class="sub">Knowing the length rules out most splits</span></label><button class="switch" role="switch" id="swLen" aria-label="Show word length"></button></div>
@@ -339,6 +350,9 @@ th { color: var(--muted); font-weight: 700; }
       <div class="row"><label>Hidden digits<span class="sub">Shown as ?, tap to cycle 1–9, 0</span></label><div class="seg" id="segHidden"></div></div>
       <div class="row"><label>Real words only<span class="sub">Nonsense splits don't count as tries</span></label><button class="switch" role="switch" id="swReal" aria-label="Real words only"></button></div>
       <div class="row"><label>Harder numbers<span class="sub">Words whose number splits many ways</span></label><button class="switch" role="switch" id="swHard" aria-label="Harder numbers"></button></div>
+      <div class="row"><label>Wrong-check penalty<span class="sub">Seconds added per wrong check</span></label><div class="seg" id="segPen"></div></div>
+      <button class="btn" id="resetLevel">Reset this level to its defaults</button>
+      <p class="muted small" id="testNote"></p>
       <div class="sect">Puzzles</div>
       <div class="btnrow"><button class="btn" id="newPractice">New practice puzzle</button><button class="btn" id="replayDaily">Replay today's</button></div>
       <div class="sect">Test log</div>
@@ -382,38 +396,57 @@ function chunks(num, cuts) {
 }
 const HARD = WORDS.daily.filter(w => allSplits(enc(w)).length >= 20);
 
-/* ---------- settings ---------- */
-const PRESETS = {
-  easy:   { live: true,  showLen: true,  fb: 'lock',  splits: 'always', tries: 6, hard: false, hidden: 0, real: false, peeks: 0 },
-  medium: { live: true,  showLen: false, fb: 'count', splits: 'after',  tries: 6, hard: false, hidden: 0, real: false, peeks: 0 },
-  hard:   { live: false, showLen: false, fb: 'count', splits: 'off',    tries: 4, hard: true,  hidden: 0, real: false, peeks: 0 },
-  expert: { live: false, showLen: false, fb: 'count', splits: 'off',    tries: 6, hard: true,  hidden: 2, real: true,  peeks: 3 }
+/* ---------- levels + settings ---------- */
+const LEVELS = {
+  kid:     { name: 'Kid',     blurb: 'Letters show as you cut',  live: true,  showLen: true,  fb: 'lock',  splits: 'off', tries: 0, hard: false, hidden: 0, real: false, peeks: 0, penalty: 10 },
+  regular: { name: 'Regular', blurb: '1 hidden digit · 3 peeks', live: false, showLen: false, fb: 'count', splits: 'off', tries: 0, hard: false, hidden: 1, real: false, peeks: 3, penalty: 10 },
+  expert:  { name: 'Expert',  blurb: '2 hidden digits · no help', live: false, showLen: false, fb: 'count', splits: 'off', tries: 0, hard: true,  hidden: 2, real: false, peeks: 0, penalty: 10 }
 };
-const PRESET_NOTES = { easy: 'Letters, length, locks', medium: 'No length, count only', hard: 'No letters, 4 tries', expert: '2 hidden digits, 3 peeks' };
-let S = Object.assign({ preset: 'easy' }, PRESETS.easy, store.get('sw-settings', {}));
-for (const k of Object.keys(PRESETS.easy)) if (S[k] === undefined) S[k] = PRESETS.easy[k];
+const LEVEL_KEYS = Object.keys(LEVELS);
+let LEVEL = store.get('sw-level', 'regular'); if (!LEVELS[LEVEL]) LEVEL = 'regular';
+let OVR = store.get('sw-overrides', {});
+let S;
+const settingsFor = l => ({ ...LEVELS[l], ...(OVR[l] || {}) });
+function loadS() { S = settingsFor(LEVEL); }
+loadS();
+const isTest = l => OVR[l] && Object.keys(OVR[l]).length > 0;
+const levelName = () => LEVELS[LEVEL].name + (isTest(LEVEL) ? ' (test)' : '');
+function setLevel(l) { LEVEL = l; store.set('sw-level', l); loadS(); }
 let THEME = store.get('sw-theme', 'system');
 function applyTheme() { if (THEME === 'system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', THEME); }
 applyTheme();
-const levelName = () => S.preset === 'custom' ? 'Custom' : S.preset[0].toUpperCase() + S.preset.slice(1);
 
 /* ---------- dates ---------- */
 const EPOCH = Date.UTC(2026, 10, 1);
 const todayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const dayNo = () => { const d = new Date(); return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - EPOCH) / 864e5) + 1; };
 function hash(n) { let x = n * 2654435761 % 4294967296; x ^= x >>> 13; x = x * 1597334677 % 4294967296; return x >>> 0; }
-const pool = () => S.hard ? HARD : WORDS.daily;
-const dailyWord = () => pool()[hash(dayNo() + 7) % pool().length];
-const randomWord = () => pool()[Math.floor(Math.random() * pool().length)];
+const KIDPOOL = WORDS.daily.filter(w => w.length <= 6);
+const REGPOOL = WORDS.daily.filter(w => w.length >= 6);
+const poolFor = (l, s) => s.hard ? HARD : (l === 'kid' ? KIDPOOL : REGPOOL);
+function dailyWords() { // one unique word per level per day
+  const used = [], out = {};
+  LEVEL_KEYS.forEach((l, i) => {
+    const pl = poolFor(l, settingsFor(l)); let k = hash(dayNo() * 7 + i * 101) % pl.length;
+    while (used.includes(pl[k])) k = (k + 1) % pl.length;
+    out[l] = pl[k]; used.push(pl[k]);
+  });
+  return out;
+}
+const dailyWord = () => dailyWords()[LEVEL];
+const randomWord = () => { const pl = poolFor(LEVEL, S); return pl[Math.floor(Math.random() * pl.length)]; };
+const savedKey = (l = LEVEL) => `sw-daily-${l}-${todayKey()}`;
 const fmtTime = ms => { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
 /* ---------- board renderer ---------- */
 function renderBoard(el, o) {
   const num = o.num, cs = new Set(o.cuts), ch = chunks(num, cs), n = num.length;
   const hid = o.hid || { set: [], locked: new Set() };
-  const avail = Math.min(el.parentElement.clientWidth || 340, 480) - 24 - (ch.length - 1) * 14 - ch.length * 8;
-  const w = Math.max(14, Math.min(30, Math.floor(avail / n)));
+  const avail = Math.min(el.parentElement.clientWidth || 340, 480) - 32 - (ch.length - 1) * 12 - ch.length * 6;
+  const w = Math.max(12, Math.min(30, Math.floor(avail / n)));
+  const ltw = Math.min(30, w + 6);
   el.style.setProperty('--dw', w + 'px'); el.style.setProperty('--dsize', Math.round(Math.min(32, w * 1.12)) + 'px');
+  el.style.setProperty('--ltw', ltw + 'px'); el.style.setProperty('--lth', Math.round(Math.min(34, ltw * 1.15)) + 'px'); el.style.setProperty('--lts', Math.round(Math.min(18, ltw * .62)) + 'px');
   let html = '';
   ch.forEach((c, gi) => {
     let digits = '';
@@ -463,14 +496,14 @@ const effNum = guess => [...P.num].map((d, i) => P.hidden.includes(i) ? (guess[i
 function newPuzzle(word, kind) {
   const num = enc(word);
   P = { word, num, kind, ans: cutsOf(word), cuts: [], locked: new Set(), miss: new Set(), attempts: [], cutsPlaced: 0, start: Date.now(), done: false, won: false, fresh: null,
-        hidden: pickHidden(word, num, S.hidden), guess: {}, dlocked: new Set(), dmiss: {}, peeksUsed: 0, peeking: false, popAt: null };
+        hidden: pickHidden(word, num, S.hidden), guess: {}, dlocked: new Set(), dmiss: {}, peeksUsed: 0, peeking: false, popAt: null, pen: 0 };
   renderDaily();
 }
 function startDaily(force) {
-  const saved = store.get('sw-daily-' + todayKey(), null);
+  const saved = store.get(savedKey(), null);
   newPuzzle(dailyWord(), 'daily');
   if (saved && !force) {
-    Object.assign(P, { word: saved.word, num: enc(saved.word), ans: cutsOf(saved.word), done: true, won: saved.won, wonWord: saved.wonWord || saved.word, attempts: saved.attempts || [], cutsPlaced: saved.cuts, elapsed: saved.time, peeksUsed: saved.peeks || 0, hidden: [], level: saved.level });
+    Object.assign(P, { word: saved.word, num: enc(saved.word), ans: cutsOf(saved.word), done: true, won: saved.won, wonWord: saved.wonWord || saved.word, attempts: saved.attempts || [], cutsPlaced: saved.cuts, elapsed: saved.time, peeksUsed: saved.peeks || 0, pen: saved.pen || 0, hidden: [], level: saved.level });
     P.cuts = [...cutsOf(P.wonWord)];
     renderDaily();
   }
@@ -504,15 +537,15 @@ function consistentFor(g) {
 function renderDaily() {
   const L = P.word.length;
   $('dNo').textContent = P.kind === 'daily' ? `Puzzle No. ${dayNo()}` : 'Practice puzzle';
-  $('dSub').textContent = P.kind === 'daily' ? new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : 'Does not count toward stats';
+  $('dSub').textContent = `${levelName()} · ` + (P.kind === 'daily' ? new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : 'does not count toward stats');
   $('dLen').innerHTML = S.showLen || P.done ? `<b>${L}</b> letters` : 'Length hidden';
   renderBoard($('dDigits'), { num: P.done ? P.num : effNum(P.guess), cuts: P.cuts, locked: P.locked, miss: P.miss, live: S.live || P.done || P.peeking, fresh: P.fresh, popAt: P.popAt, hid: P.done ? null : { set: P.hidden, locked: P.dlocked }, solved: P.done && P.won, static: P.done });
   P.fresh = null; P.popAt = null;
   const chips = [];
   if (!P.done) {
-    chips.push(`<span class="chip"><b id="dClock">${fmtTime(Date.now() - P.start)}</b></span>`);
+    chips.push(`<span class="chip"><b id="dClock">${fmtTime(Date.now() - P.start + P.pen * 1000)}</b></span>`);
     chips.push(`<span class="chip"><b>${P.cutsPlaced}</b> ${P.cutsPlaced === 1 ? 'cut' : 'cuts'}</span>`);
-    chips.push(`<span class="chip">${S.tries ? `<b>${Math.max(0, S.tries - P.attempts.length)}</b> tries left` : `<b>${P.attempts.length}</b> tries`}</span>`);
+    chips.push(`<span class="chip">${S.tries ? `<b>${Math.max(0, S.tries - P.attempts.length)}</b> tries left` : `<b>${P.attempts.length}</b> ${P.attempts.length === 1 ? 'check' : 'checks'}`}</span>`);
     if (P.hidden.length) chips.push(`<span class="chip"><b>${P.hidden.length}</b> hidden</span>`);
     if (S.splits === 'always' || (S.splits === 'after' && P.attempts.length)) { const c = consistent(); chips.push(`<span class="chip"><b>${c}</b> possible ${c === 1 ? 'split' : 'splits'}</span>`); }
   }
@@ -522,6 +555,7 @@ function renderDaily() {
   if (usePeeks) { const left = S.peeks - P.peeksUsed; $('dPeek').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>${P.peeking ? 'Peeking…' : left ? `Peek · ${left} left` : 'No peeks left'}`; $('dPeek').disabled = P.peeking || !left; }
   $('dControls').classList.toggle('hidden', P.done);
   $('dShowResult').classList.toggle('hidden', !P.done);
+  $('revealWrap').classList.toggle('hidden', P.done);
   const hint = P.hidden.length && !P.done ? ' Tap a ? to choose its digit.' : '';
   $('dHistory').innerHTML = P.attempts.length ? `<h3>Your checks</h3>` + P.attempts.slice().reverse().map(a => {
     const ch = chunks(P.hidden.length ? effNum(a.guess || {}) : P.num, new Set(a.cuts));
@@ -534,17 +568,18 @@ function renderDaily() {
 }
 
 /* ---------- stats ---------- */
-function getStats() { return store.get('sw-stats', { played: 0, won: 0, streak: 0, max: 0, last: null, times: [] }); }
+function getStats(l = LEVEL) { return store.get('sw-stats-' + l, { played: 0, won: 0, streak: 0, max: 0, last: null, times: [] }); }
 function recordStats(won, ms) {
+  if (isTest(LEVEL)) return;
   const st = getStats(), today = todayKey();
   if (st.last === today) return;
   const y = new Date(); y.setDate(y.getDate() - 1);
   st.played++; if (won) { st.won++; st.streak = st.last === todayKey(y) ? st.streak + 1 : 1; st.times.push(Math.round(ms / 1000)); } else st.streak = 0;
-  st.max = Math.max(st.max, st.streak); st.last = today; store.set('sw-stats', st);
+  st.max = Math.max(st.max, st.streak); st.last = today; store.set('sw-stats-' + LEVEL, st);
 }
 const BUCKETS = [['< 1 min', 0, 60], ['1–2 min', 60, 120], ['2–3 min', 120, 180], ['3–5 min', 180, 300], ['5+ min', 300, 1e9]];
-function statsHTML(highlightSec) {
-  const st = getStats();
+function statsHTML(highlightSec, l = LEVEL) {
+  const st = getStats(l);
   const pct = st.played ? Math.round(100 * st.won / st.played) : 0;
   const best = st.times.length ? fmtTime(Math.min(...st.times) * 1000) : '–';
   const avg = st.times.length ? fmtTime(st.times.reduce((a, b) => a + b, 0) / st.times.length * 1000) : '–';
@@ -559,7 +594,7 @@ function statsHTML(highlightSec) {
 /* ---------- result ---------- */
 function shareText() {
   const head = P.kind === 'daily' ? `Splitword No. ${dayNo()}` : 'Splitword practice';
-  const pk = S.peeks && !S.live ? ` · ${P.peeksUsed} ${P.peeksUsed === 1 ? 'peek' : 'peeks'}` : '';
+  const pk = (S.peeks && !S.live ? ` · ${P.peeksUsed} ${P.peeksUsed === 1 ? 'peek' : 'peeks'}` : '') + ` · ${P.attempts.length} ${P.attempts.length === 1 ? 'check' : 'checks'}`;
   const lines = P.attempts.map(a => a.win ? '🟩'.repeat(Math.max(1, a.cuts.length)) : '🟨'.repeat(a.right) + '⬜'.repeat(a.cuts.length - a.right));
   return `${head} · ${P.level || levelName()}\n${P.won ? 'Cracked in' : 'Missed after'} ${fmtTime(P.elapsed)} · ${P.cutsPlaced} cuts${pk}\n${lines.join('\n')}\n${SITE}`;
 }
@@ -567,32 +602,40 @@ let cdT;
 function openResult() {
   const W = (P.won ? P.wonWord : P.word).toUpperCase();
   const tiles = [...W].map((c, k) => `<span class="lt solved flip" style="--k:${k}">${c}</span>`).join('');
-  const third = S.peeks && !S.live ? ['Peeks', P.peeksUsed] : ['Tries', P.attempts.length];
-  $('rT').textContent = P.won ? (P.cutsPlaced <= P.word.length - 1 ? 'Clean cut!' : 'Cracked it') : 'So close';
+  const third = S.peeks && !S.live ? ['Peeks', P.peeksUsed] : ['Checks', P.attempts.length];
+  $('rT').textContent = P.won ? (P.cutsPlaced <= P.word.length - 1 ? 'Clean cut!' : 'Cracked it') : 'Revealed';
   $('resultBody').innerHTML = `
     <div class="result-word${P.won ? '' : ' lost'}">${tiles}</div>
     ${P.won && P.wonWord !== P.word ? `<p class="muted small" style="text-align:center">Also accepted. The intended word was ${P.word.toUpperCase()}.</p>` : ''}
     ${!P.won ? `<p class="muted small" style="text-align:center">The word was ${P.word.toUpperCase()}.</p>` : ''}
     <div class="trio"><div><b>${fmtTime(P.elapsed || 0)}</b><span>Time</span></div><div><b>${P.cutsPlaced}</b><span>Cuts</span></div><div><b>${third[1]}</b><span>${third[0]}</span></div></div>
+    ${P.pen ? `<p class="muted small" style="text-align:center;margin-top:-6px">Time includes +${P.pen}s for wrong checks.</p>` : ''}
     <button class="btn primary big" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>Share result</button>
     ${P.kind === 'daily' ? `<div class="next"><span class="muted">Next puzzle in</span><b id="countdown">--:--:--</b></div>` : `<button class="btn big" id="morePractice">Another practice puzzle</button>`}
-    ${P.kind === 'daily' ? statsHTML(P.won ? Math.round(P.elapsed / 1000) : undefined) : ''}`;
+    ${P.kind === 'daily' ? `<div class="sect">${LEVELS[LEVEL].name} stats</div>` + statsHTML(P.won ? Math.round(P.elapsed / 1000) : undefined) : ''}
+    ${P.kind === 'daily' ? otherLevelsHTML() : ''}`;
   $('shareBtn').onclick = async () => {
     const txt = shareText();
     try { await navigator.clipboard.writeText(txt); toast('Result copied. Paste it anywhere.', 'good'); } catch (e) { toast('Copying is blocked here.'); }
   };
+  document.querySelectorAll('#resultBody [data-level]').forEach(b => b.onclick = () => { closeModals(); playLevel(b.dataset.level); });
   const mp = $('morePractice'); if (mp) mp.onclick = () => { closeModals(); newPuzzle(randomWord(), 'practice'); };
   clearInterval(cdT);
   const tick = () => { const c = $('countdown'); if (!c) return; const n = new Date(), m = new Date(n); m.setHours(24, 0, 0, 0); const s = Math.floor((m - n) / 1000); c.textContent = `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
   tick(); cdT = setInterval(tick, 1000);
   openModal('mResult');
 }
+function otherLevelsHTML() {
+  const rest = LEVEL_KEYS.filter(l => l !== LEVEL && !store.get(savedKey(l), null));
+  if (!rest.length) return '';
+  return `<div class="sect">Keep going</div><div class="btnrow">${rest.map(l => `<button class="btn" data-level="${l}">Try ${LEVELS[l].name}</button>`).join('')}</div>`;
+}
 function finish(won, wonWord) {
-  P.done = true; P.won = won; P.wonWord = wonWord; P.elapsed = Date.now() - P.start; P.level = levelName();
+  P.done = true; P.won = won; P.wonWord = wonWord; P.elapsed = Date.now() - P.start + P.pen * 1000; P.level = levelName();
   if (won) P.cuts = [...cutsOf(wonWord)];
   logResult(P.kind === 'daily' ? 'Daily' : 'Practice', P.word, won ? 'Solved' : 'Missed', P.attempts.length, P.cutsPlaced, P.elapsed, null, S.peeks && !S.live ? P.peeksUsed : '–');
   if (P.kind === 'daily') {
-    store.set('sw-daily-' + todayKey(), { word: P.word, wonWord, won, cuts: P.cutsPlaced, time: P.elapsed, attempts: P.attempts, peeks: P.peeksUsed, level: P.level });
+    store.set(savedKey(), { word: P.word, wonWord, won, cuts: P.cutsPlaced, time: P.elapsed, attempts: P.attempts, peeks: P.peeksUsed, pen: P.pen, level: P.level });
     recordStats(won, P.elapsed);
   }
   renderDaily();
@@ -617,13 +660,15 @@ function submitDaily() {
   const dRight = P.hidden.filter(i => P.guess[i] === P.num[i]).length;
   P.attempts.push({ cuts: cutsArr, right, win, guess: { ...P.guess }, dRight });
   if (win) { finish(true, word); return; }
+  P.pen += S.penalty || 0;
+  const penTxt = S.penalty ? ` +${S.penalty}s` : '';
   if (S.fb === 'lock') {
     cutsArr.forEach(c => P.ans.has(c) ? P.locked.add(c) : P.miss.add(c));
     P.cuts = [...P.locked];
     P.hidden.forEach(i => { if (P.guess[i] === P.num[i]) P.dlocked.add(i); else { (P.dmiss[i] = P.dmiss[i] || new Set()).add(P.guess[i]); delete P.guess[i]; } });
-    toast(right ? `${right} ${right === 1 ? 'cut' : 'cuts'} locked in. Red dots mark wrong cuts.` : 'No cuts right. Red dots mark where not to cut.');
+    toast((right ? `${right} ${right === 1 ? 'cut' : 'cuts'} locked in. Red dots mark wrong cuts.` : 'No cuts right. Red dots mark where not to cut.') + penTxt);
   } else {
-    toast(`${right} of ${cutsArr.length} cuts right${P.hidden.length ? ` · ${dRight} of ${P.hidden.length} digits right` : ''}.`);
+    toast(`${right} of ${cutsArr.length} cuts right${P.hidden.length ? ` · ${dRight} of ${P.hidden.length} digits right` : ''}.${penTxt}`);
   }
   shake('dBoard');
   if (S.tries && P.attempts.length >= S.tries) { finish(false, null); return; }
@@ -648,12 +693,18 @@ $('dUndo').onclick = () => { for (let k = P.cuts.length - 1; k >= 0; k--) if (!P
 $('dClear').onclick = () => { P.cuts = [...P.locked]; renderDaily(); };
 $('dSubmit').onclick = submitDaily;
 $('dShowResult').onclick = openResult;
+let revealArm = 0;
+$('dReveal').onclick = () => {
+  if (P.done) return;
+  if (Date.now() - revealArm > 3000) { revealArm = Date.now(); $('dReveal').textContent = 'Tap again to reveal. This ends the puzzle.'; setTimeout(() => { $('dReveal').textContent = 'Reveal the answer'; }, 3000); return; }
+  finish(false, null);
+};
 $('dPeek').onclick = () => {
   if (P.done || P.peeking || P.peeksUsed >= S.peeks) return;
   P.peeksUsed++; P.peeking = true; renderDaily();
   setTimeout(() => { if (P) { P.peeking = false; if (!P.done) renderDaily(); } }, 2500);
 };
-setInterval(() => { const c = $('dClock'); if (c && P && !P.done) c.textContent = fmtTime(Date.now() - P.start); }, 1000);
+setInterval(() => { const c = $('dClock'); if (c && P && !P.done) c.textContent = fmtTime(Date.now() - P.start + P.pen * 1000); }, 1000);
 $('keygrid').innerHTML = Array.from({ length: 26 }, (_, i) => `<span><b>${String.fromCharCode(65 + i)}</b><em>${i + 1}</em></span>`).join('');
 $('keyToggle').onclick = () => { const h = $('keygrid').classList.toggle('hidden'); $('keyToggle').textContent = h ? 'Show A–Z key' : 'Hide A–Z key'; };
 
@@ -663,7 +714,7 @@ const rushWord = () => WORDS.rush[Math.floor(Math.random() * WORDS.rush.length)]
 function rushNext() { R.word = rushWord(); R.num = enc(R.word); R.cuts = []; R.no++; renderRush(); }
 function renderRush(solved) {
   $('rNo').textContent = R.no; $('rLen').innerHTML = `<b>${R.word.length}</b> letters`; $('rScore').textContent = R.score;
-  renderBoard($('rDigits'), { num: R.num, cuts: R.cuts, live: S.live, fresh: R.fresh, popAt: R.popAt, solved }); R.fresh = null; R.popAt = null;
+  renderBoard($('rDigits'), { num: R.num, cuts: R.cuts, live: true, fresh: R.fresh, popAt: R.popAt, solved }); R.fresh = null; R.popAt = null;
 }
 function rushStart() {
   R = { score: 0, no: 0, cuts: [], cutsPlaced: 0, skips: 0, end: Date.now() + 60000, lock: false };
@@ -718,17 +769,23 @@ function show(screen) {
   if (screen === 'daily') { renderDaily(); if (P.done) setTimeout(openResult, 200); }
   if (screen === 'home') renderHome();
 }
-function renderHome() {
-  $('hNo').textContent = `No. ${dayNo()}`;
-  $('hDate').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  const saved = store.get('sw-daily-' + todayKey(), null);
-  $('hPlay').textContent = saved ? "See today's result" : (P && P.kind === 'daily' && P.cutsPlaced ? 'Continue puzzle' : "Play today's puzzle");
+function levelStatus(l) {
+  const sv = store.get(savedKey(l), null);
+  if (sv) return sv.won ? `<span class="lv-done">✓ ${fmtTime(sv.time)}</span>` : `<span class="lv-miss">Revealed</span>`;
+  if (P && P.kind === 'daily' && l === LEVEL && P.cutsPlaced) return `<span class="lv-go">Continue</span>`;
+  return `<span class="lv-go">Play</span>`;
 }
-$('hPlay').onclick = () => {
-  if (P.kind !== 'daily') startDaily(false);
+function playLevel(l) {
+  setLevel(l); startDaily(false);
   if (!store.get('sw-seen-help', false)) { store.set('sw-seen-help', true); show('daily'); openModal('mHelp'); return; }
   show('daily');
-};
+}
+function renderHome() {
+  $('levels').innerHTML = LEVEL_KEYS.map(l => `<button class="lv lv-${l}" role="listitem" data-l="${l}"><span class="lv-name">${LEVELS[l].name}${isTest(l) ? ' <em>test</em>' : ''}</span><span class="lv-blurb">${LEVELS[l].blurb}</span>${levelStatus(l)}</button>`).join('');
+  $('levels').querySelectorAll('.lv').forEach(b => b.onclick = () => playLevel(b.dataset.l));
+  $('hNo').textContent = `No. ${dayNo()}`;
+  $('hDate').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+}
 $('hRush').onclick = () => show('rush');
 $('hHelp').onclick = () => openModal('mHelp');
 $('hStats').onclick = () => openModal('mStats');
@@ -737,10 +794,14 @@ $('back').onclick = () => { if (R) { clearInterval(R.timer); R = null; $('rPlay'
 
 /* ---------- modals ---------- */
 function openModal(id) {
-  if (id === 'mStats') $('statsBody').innerHTML = statsHTML();
+  if (id === 'mStats') renderStatsModal(LEVEL);
   if (id === 'mSettings') { renderSettings(); renderLog(); }
   if (id === 'mHelp') renderBoard($('demoBoard'), { num: '81521195', cuts: [0, 2, 4, 6], live: true, static: true });
   $(id).classList.add('open');
+}
+function renderStatsModal(l) {
+  $('statsBody').innerHTML = `<div class="seg" style="display:flex;margin-bottom:14px" id="statTabs">${LEVEL_KEYS.map(k => `<button style="flex:1" data-v="${k}" aria-pressed="${k === l}">${LEVELS[k].name}</button>`).join('')}</div><div style="display:flex;flex-direction:column;gap:16px">${statsHTML(undefined, l)}</div>`;
+  $('statTabs').querySelectorAll('button').forEach(b => b.onclick = () => renderStatsModal(b.dataset.v));
 }
 function closeModals() { document.querySelectorAll('.mbg.open').forEach(m => m.classList.remove('open')); clearInterval(cdT); }
 document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => openModal(b.dataset.open));
@@ -767,25 +828,32 @@ $('clearLog').onclick = () => { store.set('sw-log', []); renderLog(); };
 
 /* ---------- settings UI ---------- */
 function seg(id, key, opts, onSet) {
-  const cur = key === 'theme' ? THEME : S[key];
+  const cur = key === 'theme' ? THEME : key === 'level' ? LEVEL : S[key];
   $(id).innerHTML = opts.map(([v, l]) => `<button data-v="${v}" aria-pressed="${cur === v}">${l}</button>`).join('');
   $(id).querySelectorAll('button').forEach(b => b.onclick = () => { const v = opts.find(o => String(o[0]) === b.dataset.v)[0]; (onSet || (v2 => setOpt(key, v2)))(v); });
 }
 function sw(id, key) { $(id).setAttribute('aria-checked', !!S[key]); $(id).onclick = () => setOpt(key, !S[key]); }
-function setOpt(key, v) { S[key] = v; S.preset = 'custom'; for (const [k, p] of Object.entries(PRESETS)) if (Object.keys(p).every(x => p[x] === S[x])) S.preset = k; applySettings(); }
+function setOpt(key, v) {
+  const o = OVR[LEVEL] = OVR[LEVEL] || {};
+  if (LEVELS[LEVEL][key] === v) delete o[key]; else o[key] = v;
+  if (!Object.keys(o).length) delete OVR[LEVEL];
+  applySettings();
+}
 function renderSettings() {
   seg('segTheme', 'theme', [['system', 'Auto'], ['light', 'Light'], ['dark', 'Dark']], v => { THEME = v; store.set('sw-theme', v); applyTheme(); renderSettings(); });
-  $('presets').innerHTML = Object.keys(PRESETS).map(k => `<button data-p="${k}" aria-pressed="${S.preset === k}">${k[0].toUpperCase() + k.slice(1)}<span>${PRESET_NOTES[k]}</span></button>`).join('');
-  $('presets').querySelectorAll('button').forEach(b => b.onclick = () => { Object.assign(S, PRESETS[b.dataset.p], { preset: b.dataset.p }); applySettings(); });
+  seg('segLevel', 'level', LEVEL_KEYS.map(k => [k, LEVELS[k].name]), v => { setLevel(v); startDaily(false); renderSettings(); renderHome(); });
+  $('testNote').textContent = isTest(LEVEL) ? `${LEVELS[LEVEL].name} is using test settings. Its games won't count toward stats and show as "(test)".` : `${LEVELS[LEVEL].name} is on its standard settings.`;
   sw('swLive', 'live'); sw('swLen', 'showLen'); sw('swHard', 'hard'); sw('swReal', 'real');
   seg('segFb', 'fb', [['lock', 'Lock'], ['count', 'Count']]);
   seg('segSplits', 'splits', [['always', 'Always'], ['after', 'After 1st'], ['off', 'Off']]);
   seg('segTries', 'tries', [[4, '4'], [6, '6'], [0, 'No limit']]);
   seg('segHidden', 'hidden', [[0, 'None'], [1, '1'], [2, '2'], [3, '3']]);
   seg('segPeeks', 'peeks', [[0, 'None'], [3, '3'], [5, '5']]);
+  seg('segPen', 'penalty', [[0, 'None'], [10, '10s'], [20, '20s'], [30, '30s']]);
 }
+$('resetLevel').onclick = () => { delete OVR[LEVEL]; applySettings(); };
 function applySettings() {
-  store.set('sw-settings', S); renderSettings();
+  store.set('sw-overrides', OVR); loadS(); renderSettings(); renderHome();
   if (P.kind === 'daily') { if (!P.done) startDaily(true); else renderDaily(); } else newPuzzle(randomWord(), 'practice');
   toast(`Level: ${levelName()}`);
 }
