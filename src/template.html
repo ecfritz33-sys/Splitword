@@ -126,6 +126,9 @@ svg { display: block; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .chip { font-size: 13px; font-weight: 600; color: var(--muted); background: var(--tile); border-radius: 999px; padding: 5px 11px; font-variant-numeric: tabular-nums; }
 .chip b { color: var(--ink); }
+.clockbtn { border: 0; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; padding: 5px 10px; }
+.clockbtn svg { width: 16px; height: 16px; }
+.clockbtn.on { color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--cut); }
 .peek { border: 1.5px solid var(--cut); background: transparent; border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
 .peek:disabled { opacity: .45; cursor: default; }
 .peek svg { width: 18px; height: 18px; }
@@ -620,14 +623,17 @@ function renderDaily() {
   P.fresh = null; P.popAt = null;
   const chips = [];
   if (!P.done) {
-    if (SHOWCLOCK()) chips.push(`<span class="chip"><b id="dClock">${fmtTime(Date.now() - P.start + P.pen * 1000)}</b></span>`);
-    chips.push(`<span class="chip"><b>${P.cutsPlaced}</b> ${P.cutsPlaced === 1 ? 'cut' : 'cuts'} · par ${S.showLen ? parOf(P) : '?'}</span>`);
+    chips.push(SHOWCLOCK()
+      ? `<button class="chip clockbtn on" id="clockBtn" aria-pressed="true" aria-label="Hide timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><b id="dClock">${fmtTime(Date.now() - P.start + P.pen * 1000)}</b></button>`
+      : `<button class="chip clockbtn" id="clockBtn" aria-pressed="false" aria-label="Show timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg></button>`);
+    chips.push(`<span class="chip"><b>${P.cutsPlaced}</b> ${P.cutsPlaced === 1 ? 'cut' : 'cuts'}${S.showLen ? ` · par ${parOf(P)}` : ''}</span>`);
     const live = S.showLen ? overPar(P) : P.attempts.filter(a => !a.win).length + P.peeksUsed; if (live) chips.push(`<span class="chip"><b>+${live}</b> so far</span>`);
     chips.push(`<span class="chip">${S.tries ? `<b>${Math.max(0, S.tries - P.attempts.length)}</b> tries left` : `<b>${P.attempts.length}</b> ${P.attempts.length === 1 ? 'check' : 'checks'}`}</span>`);
     if (P.hidden.length) chips.push(`<span class="chip"><b>${P.hidden.length}</b> hidden</span>`);
     if (S.splits === 'always' || (S.splits === 'after' && P.attempts.length)) { const c = consistent(); chips.push(`<span class="chip"><b>${c}</b> possible ${c === 1 ? 'split' : 'splits'}</span>`); }
   }
   $('dChips').innerHTML = chips.join('');
+  const cb = $('clockBtn'); if (cb) cb.onclick = () => setClock(!SHOWCLOCK());
   const usePeeks = !S.live && S.peeks > 0 && !P.done;
   $('dPeek').classList.toggle('hidden', !usePeeks);
   if (usePeeks) { const left = S.peeks - P.peeksUsed; $('dPeek').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>${P.peeking ? 'Peeking…' : left ? `Peek · ${left} left` : 'No peeks left'}`; $('dPeek').disabled = P.peeking || !left; }
@@ -654,6 +660,7 @@ function overPar(p) {
 }
 const scoreLabel = o => o === 0 ? 'Clean cut' : `+${o}`;
 const SHOWCLOCK = () => store.get('sw-showclock', false);
+function setClock(v) { store.set('sw-showclock', v); track(v ? 'pref-clock-on' : 'pref-clock-off', false); buzz(6); if (P && !P.done) renderDaily(); }
 
 /* ---------- stats ---------- */
 function getStats(l = LEVEL) { return store.get('sw-stats-' + l, { played: 0, won: 0, streak: 0, max: 0, last: null, times: [] }); }
@@ -958,7 +965,7 @@ function setOpt(key, v) {
 }
 function renderSettings() {
   $('swClock').setAttribute('aria-checked', !!SHOWCLOCK());
-  $('swClock').onclick = () => { const v = !SHOWCLOCK(); store.set('sw-showclock', v); track(v ? 'pref-clock-on' : 'pref-clock-off', false); renderSettings(); if (P && !P.done) renderDaily(); };
+  $('swClock').onclick = () => { setClock(!SHOWCLOCK()); renderSettings(); };
   seg('segTheme', 'theme', [['system', 'Auto'], ['light', 'Light'], ['dark', 'Dark']], v => { THEME = v; store.set('sw-theme', v); applyTheme(); renderSettings(); });
   seg('segLevel', 'level', LEVEL_KEYS.map(k => [k, LEVELS[k].name]), v => { setLevel(v); startDaily(false); renderSettings(); renderHome(); });
   $('testNote').textContent = isTest(LEVEL) ? `${LEVELS[LEVEL].name} is using test settings. Its games won't count toward stats and show as "(test)".` : `${LEVELS[LEVEL].name} is on its standard settings.`;
