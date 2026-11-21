@@ -101,7 +101,7 @@ svg { display: block; }
 .lenchip b { color: var(--ink); }
 
 /* ---------- board ---------- */
-.board { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 26px 10px 18px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.board { position: relative; touch-action: none; -webkit-user-select: none; user-select: none; background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 26px 10px 18px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .pieces { display: flex; justify-content: center; align-items: flex-start; user-select: none; touch-action: manipulation; }
 .grp { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .piece { display: flex; background: var(--tile); border-radius: 12px; padding: 0 3px; transition: background .15s; }
@@ -121,6 +121,8 @@ svg { display: block; }
 .lt.bad { color: var(--bad); border-color: var(--bad); }
 .lt.solved { background: var(--good); border-color: var(--good); color: #fff; }
 
+.ghost { position: absolute; width: 0; margin-left: -2px; border-left: 4px dashed var(--cut); transform: rotate(13deg); pointer-events: none; z-index: 2; opacity: .9; }
+.ghost.remove { border-left-color: var(--bad); border-left-style: dotted; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .chip { font-size: 13px; font-weight: 600; color: var(--muted); background: var(--tile); border-radius: 999px; padding: 5px 11px; font-variant-numeric: tabular-nums; }
 .chip b { color: var(--ink); }
@@ -317,7 +319,7 @@ th { color: var(--muted); font-weight: 700; }
   <div class="demo"><div class="pieces" id="demoBoard"></div></div>
   <p class="muted small" style="text-align:center">81521195 cut as 8 | 15 | 21 | 19 | 5 spells HOUSE.</p>
   <ul class="rules">
-    <li><span>1</span><div>Tap between two digits to cut. Tap the same spot again to remove the cut.</div></li>
+    <li><span>1</span><div>Touch the number and slide your finger. A dashed line shows where the cut will go. Let go to cut. Do the same on a cut to remove it.</div></li>
     <li><span>2</span><div>Watch for the traps. 15 could be O, or A then E.</div></li>
     <li><span>3</span><div>A 0 never starts a letter. It always belongs to 10 (J) or 20 (T).</div></li>
     <li><span>4</span><div>Press Check any time. It tells you how many cuts are right, but each wrong check adds 10 seconds.</div></li>
@@ -481,6 +483,61 @@ function renderBoard(el, o) {
     if (gi < ch.length - 1) html += `<span class="cut${o.locked && o.locked.has(c.end) ? ' locked' : ''}${o.fresh === c.end ? ' new' : ''}" style="--k:${gi}"></span>`;
   });
   el.innerHTML = html;
+}
+/* Cutter: press anywhere on the board, slide to the right gap, release to cut.
+   A dashed preview snaps to the nearest gap so small digits are easy to hit. */
+function attachCutter(el, o) {
+  const board = el.parentElement;
+  const ghost = document.createElement('div'); ghost.className = 'ghost hidden'; ghost.setAttribute('aria-hidden', 'true'); board.appendChild(ghost);
+  let gaps = [], cur = null, start = null, digit = null;
+  const measure = () => {
+    const ds = [...el.querySelectorAll('.d')], num = o.num(); gaps = [];
+    for (let k = 0; k < ds.length - 1; k++) {
+      const g = +ds[k].dataset.i; if (!cutAllowed(num, g) || o.blocked(g)) continue;
+      const a = ds[k].getBoundingClientRect(), b = ds[k + 1].getBoundingClientRect();
+      gaps.push({ g, x: (a.right + b.left) / 2 });
+    }
+    const br = board.getBoundingClientRect(), d0 = ds[0].getBoundingClientRect();
+    ghost.style.top = (d0.top - br.top - 8) + 'px'; ghost.style.height = (d0.height + 16) + 'px';
+  };
+  const nearest = x => gaps.reduce((best, p) => !best || Math.abs(p.x - x) < Math.abs(best.x - x) ? p : best, null);
+  const show = p => { const br = board.getBoundingClientRect(); ghost.style.left = (p.x - br.left) + 'px'; ghost.classList.toggle('remove', o.has(p.g)); ghost.classList.remove('hidden'); };
+  board.addEventListener('pointerdown', e => {
+    if (!o.active() || e.button > 0) return;
+    if (e.target.closest('button') && !e.target.closest('.d')) return; // peek and other buttons
+    const pr = el.getBoundingClientRect();
+    if (e.clientY > pr.bottom + 10) return; // chips area below the number
+    e.preventDefault();
+    measure(); start = { x: e.clientX }; cur = null; digit = null;
+    const t = e.target.closest('.d');
+    if (t && o.onDigit && o.isHidden && o.isHidden(+t.dataset.i)) {
+      const r = t.getBoundingClientRect();
+      if (Math.abs(e.clientX - (r.left + r.width / 2)) < r.width * 0.32) digit = +t.dataset.i; // center of a ? cycles its digit
+    }
+    if (digit === null) { cur = nearest(e.clientX); if (cur) show(cur); }
+    try { board.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  board.addEventListener('pointermove', e => {
+    if (!start) return;
+    if (digit !== null) { if (Math.abs(e.clientX - start.x) < 10) return; digit = null; }
+    const p = nearest(e.clientX);
+    if (p && (!cur || p.g !== cur.g)) { cur = p; show(p); buzz(4); }
+  });
+  const end = e => {
+    if (!start) return;
+    ghost.classList.add('hidden');
+    const d = digit, c = cur; start = null; cur = null; digit = null;
+    if (e.type !== 'pointerup') return;
+    if (d !== null) o.onDigit(d); else if (c) o.onCut(c.g);
+  };
+  board.addEventListener('pointerup', end); board.addEventListener('pointercancel', end);
+  // keyboard: Enter or Space on a digit cuts after it (or cycles a ?)
+  el.addEventListener('click', e => {
+    if (e.detail !== 0 || !o.active()) return;
+    const t = e.target.closest('.d'); if (!t) return;
+    const i = +t.dataset.i;
+    if (o.onDigit && o.isHidden && o.isHidden(i)) o.onDigit(i); else o.onCut(i);
+  });
 }
 function gapFromEvent(e) {
   const t = e.target.closest('.d'); if (!t) return null;
@@ -694,19 +751,26 @@ function submitDaily() {
   renderDaily();
 }
 
-$('dDigits').addEventListener('click', e => {
-  if (P.done) return;
-  const t = e.target.closest('.d');
-  if (t && t.dataset.h) {
-    const i = +t.dataset.i; if (P.dlocked.has(i)) return;
-    const order = [undefined, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-    P.guess[i] = order[(order.indexOf(P.guess[i]) + 1) % order.length]; if (P.guess[i] === undefined) delete P.guess[i];
-    buzz(8); renderDaily(); return;
-  }
-  const g = gapFromEvent(e); if (g === null || !cutAllowed(effNum(P.guess), g) || P.locked.has(g)) return;
+function dailyCut(g) {
+  if (P.done || !cutAllowed(effNum(P.guess), g) || P.locked.has(g)) return;
   const i = P.cuts.indexOf(g);
   if (i >= 0) P.cuts.splice(i, 1); else { P.cuts.push(g); P.cutsPlaced++; P.fresh = g; P.popAt = [...P.cuts].sort((a, b) => a - b).indexOf(g); }
   buzz(10); renderDaily();
+}
+function dailyDigit(i) {
+  if (P.done || P.dlocked.has(i)) return;
+  const order = [undefined, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+  P.guess[i] = order[(order.indexOf(P.guess[i]) + 1) % order.length]; if (P.guess[i] === undefined) delete P.guess[i];
+  buzz(8); renderDaily();
+}
+attachCutter($('dDigits'), {
+  active: () => P && !P.done,
+  num: () => effNum(P.guess),
+  blocked: g => P.locked.has(g),
+  has: g => P.cuts.includes(g),
+  onCut: dailyCut,
+  onDigit: dailyDigit,
+  isHidden: i => P.hidden.includes(i)
 });
 $('dUndo').onclick = () => { for (let k = P.cuts.length - 1; k >= 0; k--) if (!P.locked.has(P.cuts[k])) { P.cuts.splice(k, 1); break; } renderDaily(); };
 $('dClear').onclick = () => { P.cuts = [...P.locked]; renderDaily(); };
@@ -761,9 +825,8 @@ function rushEnd() {
   $('rPlay').classList.add('hidden'); $('rStart').classList.remove('hidden'); $('rGo').textContent = 'Play again';
   R = null; openModal('mRush');
 }
-$('rDigits').addEventListener('click', e => {
-  if (!R || R.lock) return;
-  const g = gapFromEvent(e); if (g === null || !cutAllowed(R.num, g)) return;
+function rushCut(g) {
+  if (!R || R.lock || !cutAllowed(R.num, g)) return;
   const i = R.cuts.indexOf(g);
   if (i >= 0) R.cuts.splice(i, 1); else { R.cuts.push(g); R.cutsPlaced++; R.fresh = g; R.popAt = [...R.cuts].sort((a, b) => a - b).indexOf(g); }
   buzz(10);
@@ -774,6 +837,13 @@ $('rDigits').addEventListener('click', e => {
     return;
   }
   renderRush();
+}
+attachCutter($('rDigits'), {
+  active: () => R && !R.lock,
+  num: () => R.num,
+  blocked: () => false,
+  has: g => R.cuts.includes(g),
+  onCut: rushCut
 });
 $('rClear').onclick = () => { if (R) { R.cuts = []; renderRush(); } };
 $('rSkip').onclick = () => { if (R && !R.lock) { R.skips++; toast(`That was ${R.word.toUpperCase()}.`); rushNext(); } };
