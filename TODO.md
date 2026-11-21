@@ -19,7 +19,9 @@ Owner: **Evan** = you, **Claude** = me. Checked items are done.
 - [ ] Recruit 10–20 testers, including a couple of kids for the Kid level (Evan)
 - [ ] Watch retention: day-1, day-7 return rates and daily active players (Evan + Claude)
 - [ ] Tune difficulty per level from solve rates and times (Evan + Claude)
-- [ ] Revisit the 10-second penalty (Evan)
+- [x] Easier cutting: press, slide to the gap, release (Claude)
+- [x] Par scoring (golf-style) with time shown in results; live clock is an opt-in setting (Claude)
+- [ ] Compare par vs. clock: GoatCounter events pref-clock-on/off and playing-with/without-clock, plus tester feedback (Evan)
 - [ ] Collect tester feedback on fun, confusion points and bugs (Evan)
 
 ## Name and brand

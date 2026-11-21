@@ -77,7 +77,7 @@ svg { display: block; }
 .lv-blurb { grid-row: 2; font-size: 13px; color: var(--muted); }
 .lv > span:last-child { grid-row: 1 / 3; grid-column: 2; }
 .lv-go { background: var(--ink); color: var(--paper); font-weight: 800; font-size: 14px; padding: 8px 14px; border-radius: 999px; }
-.lv-done { color: var(--good); font: 800 15px/1 var(--display); }
+.lv-done { color: var(--good); font: 800 14px/1 var(--display); white-space: nowrap; }
 .lv-miss { color: var(--muted); font-weight: 700; font-size: 13px; }
 .install { display: flex; align-items: center; gap: 12px; width: min(360px, 100%); background: var(--card); border-radius: 16px; padding: 12px 14px; box-shadow: var(--shadow); text-align: left; font-size: 14px; }
 .install img { width: 40px; height: 40px; border-radius: 10px; }
@@ -186,7 +186,7 @@ svg { display: block; }
 .statgrid div b { display: block; font: 800 26px/1.1 var(--display); font-variant-numeric: tabular-nums; }
 .statgrid div span { font-size: 12px; color: var(--muted); }
 .bars { display: flex; flex-direction: column; gap: 6px; }
-.bar { display: grid; grid-template-columns: 56px 1fr; gap: 8px; align-items: center; font-size: 13px; }
+.bar { display: grid; grid-template-columns: 82px 1fr; gap: 8px; align-items: center; font-size: 13px; }
 .bar div { background: var(--tile); border-radius: 6px; height: 22px; position: relative; }
 .bar div i { position: absolute; inset: 0 auto 0 0; background: var(--muted); border-radius: 6px; min-width: 22px; color: var(--paper); font: 700 12px/22px var(--display); font-style: normal; text-align: right; padding-right: 7px; }
 .bar.me div i { background: var(--good); }
@@ -198,6 +198,9 @@ svg { display: block; }
 .trio div { background: var(--card); border-radius: 16px; box-shadow: var(--shadow); padding: 12px 6px; text-align: center; }
 .trio b { display: block; font: 800 24px/1.1 var(--display); font-variant-numeric: tabular-nums; }
 .trio span { font-size: 12px; color: var(--muted); }
+.score { text-align: center; display: flex; flex-direction: column; gap: 2px; }
+.score b { font: 800 44px/1 var(--display); letter-spacing: -0.04em; color: var(--good); }
+.score span { color: var(--muted); font-size: 14px; }
 .next { display: flex; justify-content: space-between; align-items: center; background: var(--card); border-radius: 16px; padding: 12px 16px; box-shadow: var(--shadow); }
 .next b { font: 800 22px/1 var(--display); font-variant-numeric: tabular-nums; }
 
@@ -322,8 +325,8 @@ th { color: var(--muted); font-weight: 700; }
     <li><span>1</span><div>Touch the number and slide your finger. A dashed line shows where the cut will go. Let go to cut. Do the same on a cut to remove it.</div></li>
     <li><span>2</span><div>Watch for the traps. 15 could be O, or A then E.</div></li>
     <li><span>3</span><div>A 0 never starts a letter. It always belongs to 10 (J) or 20 (T).</div></li>
-    <li><span>4</span><div>Press Check any time. It tells you how many cuts are right, but each wrong check adds 10 seconds.</div></li>
-    <li><span>5</span><div>Your score is your time and the number of cuts you made. Fewer is better.</div></li>
+    <li><span>4</span><div>Press Check any time. It tells you how many cuts are right, but a wrong check costs +1.</div></li>
+    <li><span>5</span><div>Scoring works like golf. Par is the fewest cuts the word needs. Every extra cut (including ones you undo), wrong check or peek is +1. Hit par for a Clean cut. Your time shows in the results too.</div></li>
   </ul>
   <p class="muted small">Three new puzzles arrive every day at midnight: Kid shows the letters as you cut, Regular hides one digit and gives you 3 peeks, and Expert hides two digits with no help.</p>
   <button class="btn primary big" data-close>Let's play</button>
@@ -351,6 +354,7 @@ th { color: var(--muted); font-weight: 700; }
 <div class="mbg" id="mSettings"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="stT">
   <div class="mhead"><h2 id="stT">Settings</h2><button class="ibtn" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="row"><label>Appearance</label><div class="seg" id="segTheme"></div></div>
+  <div class="row"><label for="swClock">Show timer while playing<span class="sub">Your time always shows in the results</span></label><button class="switch" role="switch" id="swClock" aria-label="Show timer while playing"></button></div>
   <details class="playtest" id="playtest">
     <summary>Playtest controls</summary>
     <div>
@@ -416,9 +420,9 @@ const HARD = WORDS.daily.filter(w => allSplits(enc(w)).length >= 20);
 
 /* ---------- levels + settings ---------- */
 const LEVELS = {
-  kid:     { name: 'Kid',     blurb: 'Letters show as you cut',  live: true,  showLen: true,  fb: 'lock',  splits: 'off', tries: 0, hard: false, hidden: 0, real: false, peeks: 0, penalty: 10 },
-  regular: { name: 'Regular', blurb: '1 hidden digit · 3 peeks', live: false, showLen: false, fb: 'count', splits: 'off', tries: 0, hard: false, hidden: 1, real: false, peeks: 3, penalty: 10 },
-  expert:  { name: 'Expert',  blurb: '2 hidden digits · no help', live: false, showLen: false, fb: 'count', splits: 'off', tries: 0, hard: true,  hidden: 2, real: false, peeks: 0, penalty: 10 }
+  kid:     { name: 'Kid',     blurb: 'Letters show as you cut',  live: true,  showLen: true,  fb: 'lock',  splits: 'off', tries: 0, hard: false, hidden: 0, real: false, peeks: 0, penalty: 0 },
+  regular: { name: 'Regular', blurb: '1 hidden digit · 3 peeks', live: false, showLen: false, fb: 'count', splits: 'off', tries: 0, hard: false, hidden: 1, real: false, peeks: 3, penalty: 0 },
+  expert:  { name: 'Expert',  blurb: '2 hidden digits · no help', live: false, showLen: false, fb: 'count', splits: 'off', tries: 0, hard: true,  hidden: 2, real: false, peeks: 0, penalty: 0 }
 };
 const LEVEL_KEYS = Object.keys(LEVELS);
 let LEVEL = store.get('sw-level', 'regular'); if (!LEVELS[LEVEL]) LEVEL = 'regular';
@@ -616,8 +620,9 @@ function renderDaily() {
   P.fresh = null; P.popAt = null;
   const chips = [];
   if (!P.done) {
-    chips.push(`<span class="chip"><b id="dClock">${fmtTime(Date.now() - P.start + P.pen * 1000)}</b></span>`);
-    chips.push(`<span class="chip"><b>${P.cutsPlaced}</b> ${P.cutsPlaced === 1 ? 'cut' : 'cuts'}</span>`);
+    if (SHOWCLOCK()) chips.push(`<span class="chip"><b id="dClock">${fmtTime(Date.now() - P.start + P.pen * 1000)}</b></span>`);
+    chips.push(`<span class="chip"><b>${P.cutsPlaced}</b> ${P.cutsPlaced === 1 ? 'cut' : 'cuts'} · par ${S.showLen ? parOf(P) : '?'}</span>`);
+    const live = S.showLen ? overPar(P) : P.attempts.filter(a => !a.win).length + P.peeksUsed; if (live) chips.push(`<span class="chip"><b>+${live}</b> so far</span>`);
     chips.push(`<span class="chip">${S.tries ? `<b>${Math.max(0, S.tries - P.attempts.length)}</b> tries left` : `<b>${P.attempts.length}</b> ${P.attempts.length === 1 ? 'check' : 'checks'}`}</span>`);
     if (P.hidden.length) chips.push(`<span class="chip"><b>${P.hidden.length}</b> hidden</span>`);
     if (S.splits === 'always' || (S.splits === 'after' && P.attempts.length)) { const c = consistent(); chips.push(`<span class="chip"><b>${c}</b> possible ${c === 1 ? 'split' : 'splits'}</span>`); }
@@ -640,6 +645,16 @@ function renderDaily() {
   }).join('') : (hint ? `<p class="muted small" style="text-align:center;margin:0">${hint.trim()}</p>` : '');
 }
 
+/* ---------- par scoring ----------
+   Par = the fewest cuts possible (letters - 1). Every extra cut, wrong check and peek is +1. */
+const parOf = p => p.word.length - 1;
+function overPar(p) {
+  const wrong = (p.attempts || []).filter(a => !a.win).length;
+  return Math.max(0, p.cutsPlaced - parOf(p)) + wrong + (p.peeksUsed || 0);
+}
+const scoreLabel = o => o === 0 ? 'Clean cut' : `+${o}`;
+const SHOWCLOCK = () => store.get('sw-showclock', false);
+
 /* ---------- stats ---------- */
 function getStats(l = LEVEL) { return store.get('sw-stats-' + l, { played: 0, won: 0, streak: 0, max: 0, last: null, times: [] }); }
 function recordStats(won, ms) {
@@ -647,12 +662,17 @@ function recordStats(won, ms) {
   const st = getStats(), today = todayKey();
   if (st.last === today) return;
   const y = new Date(); y.setDate(y.getDate() - 1);
-  st.played++; if (won) { st.won++; st.streak = st.last === todayKey(y) ? st.streak + 1 : 1; st.times.push(Math.round(ms / 1000)); } else st.streak = 0;
+  st.played++; if (won) { st.won++; st.streak = st.last === todayKey(y) ? st.streak + 1 : 1; st.times.push(Math.round(ms / 1000)); (st.scores = st.scores || []).push(overPar(P)); } else st.streak = 0;
   st.max = Math.max(st.max, st.streak); st.last = today; store.set('sw-stats-' + LEVEL, st);
 }
 const BUCKETS = [['< 1 min', 0, 60], ['1–2 min', 60, 120], ['2–3 min', 120, 180], ['3–5 min', 180, 300], ['5+ min', 300, 1e9]];
-function statsHTML(highlightSec, l = LEVEL) {
-  const st = getStats(l);
+const SBUCKETS = [['Clean cut', 0, 1], ['+1', 1, 2], ['+2', 2, 3], ['+3', 3, 4], ['+4 or more', 4, 1e9]];
+function statsHTML(highlightSec, l = LEVEL, highlightScore) {
+  const st = getStats(l); st.scores = st.scores || [];
+  const sc = SBUCKETS.map(([, lo, hi]) => st.scores.filter(s => s >= lo && s < hi).length), smax = Math.max(1, ...sc);
+  const sbars = SBUCKETS.map(([label, lo, hi], i) => `<div class="bar${highlightScore !== undefined && highlightScore >= lo && highlightScore < hi ? ' me' : ''}"><span class="muted">${label}</span><div><i style="width:${Math.max(8, sc[i] / smax * 100)}%">${sc[i]}</i></div></div>`).join('');
+  const clean = st.scores.filter(s => s === 0).length;
+  const avgScore = st.scores.length ? (st.scores.reduce((a, b) => a + b, 0) / st.scores.length) : null;
   const pct = st.played ? Math.round(100 * st.won / st.played) : 0;
   const best = st.times.length ? fmtTime(Math.min(...st.times) * 1000) : '–';
   const avg = st.times.length ? fmtTime(st.times.reduce((a, b) => a + b, 0) / st.times.length * 1000) : '–';
@@ -660,32 +680,37 @@ function statsHTML(highlightSec, l = LEVEL) {
   const max = Math.max(1, ...counts);
   const bars = BUCKETS.map(([label, lo, hi], i) => `<div class="bar${highlightSec !== undefined && highlightSec >= lo && highlightSec < hi ? ' me' : ''}"><span class="muted">${label}</span><div><i style="width:${Math.max(8, counts[i] / max * 100)}%">${counts[i]}</i></div></div>`).join('');
   return `<div class="statgrid"><div><b>${st.played}</b><span>Played</span></div><div><b>${pct}</b><span>Solved %</span></div><div><b>${st.streak}</b><span>Streak</span></div><div><b>${st.max}</b><span>Best streak</span></div></div>
-  <div class="trio" style="grid-template-columns:1fr 1fr"><div><b>${best}</b><span>Fastest</span></div><div><b>${avg}</b><span>Average</span></div></div>
-  <div class="sect">Solve times</div><div class="bars">${bars}</div>`;
+  <div class="trio"><div><b>${clean}</b><span>Clean cuts</span></div><div><b>${avgScore === null ? '–' : (avgScore === 0 ? '0' : '+' + avgScore.toFixed(1))}</b><span>Avg score</span></div><div><b>${best}</b><span>Fastest</span></div></div>
+  <div class="sect">Scores</div><div class="bars">${sbars}</div>
+  <div class="sect">Solve times · average ${avg}</div><div class="bars">${bars}</div>`;
 }
 
 /* ---------- result ---------- */
 function shareText() {
   const head = P.kind === 'daily' ? `Splitword No. ${dayNo()}` : 'Splitword practice';
-  const pk = (S.peeks && !S.live ? ` · ${P.peeksUsed} ${P.peeksUsed === 1 ? 'peek' : 'peeks'}` : '') + ` · ${P.attempts.length} ${P.attempts.length === 1 ? 'check' : 'checks'}`;
   const lines = P.attempts.map(a => a.win ? '🟩'.repeat(Math.max(1, a.cuts.length)) : '🟨'.repeat(a.right) + '⬜'.repeat(a.cuts.length - a.right));
-  return `${head} · ${P.level || levelName()}\n${P.won ? 'Cracked in' : 'Missed after'} ${fmtTime(P.elapsed)} · ${P.cutsPlaced} cuts${pk}\n${lines.join('\n')}\n${SITE}?s=1`;
+  const o = overPar(P);
+  const scoreLine = P.won ? (o === 0 ? 'Clean cut ✂️' : `${scoreLabel(o)} over par`) : 'Revealed';
+  return `${head} · ${P.level || levelName()}\n${scoreLine} · ${fmtTime(P.elapsed)}\n${lines.join('\n')}\n${SITE}?s=1`;
 }
 let cdT;
 function openResult() {
   const W = (P.won ? P.wonWord : P.word).toUpperCase();
   const tiles = [...W].map((c, k) => `<span class="lt solved flip" style="--k:${k}">${c}</span>`).join('');
-  const third = S.peeks && !S.live ? ['Peeks', P.peeksUsed] : ['Checks', P.attempts.length];
-  $('rT').textContent = P.won ? (P.cutsPlaced <= P.word.length - 1 ? 'Clean cut!' : 'Cracked it') : 'Revealed';
+  const o = overPar(P), par = parOf(P), wrong = P.attempts.filter(a => !a.win).length;
+  const extra = Math.max(0, P.cutsPlaced - par);
+  const parts = [`${P.cutsPlaced} cuts (par ${par})`]; if (wrong) parts.push(`${wrong} wrong ${wrong === 1 ? 'check' : 'checks'}`); if (P.peeksUsed) parts.push(`${P.peeksUsed} ${P.peeksUsed === 1 ? 'peek' : 'peeks'}`);
+  $('rT').textContent = P.won ? (o === 0 ? 'Clean cut!' : 'Cracked it') : 'Revealed';
   $('resultBody').innerHTML = `
     <div class="result-word${P.won ? '' : ' lost'}">${tiles}</div>
     ${P.won && P.wonWord !== P.word ? `<p class="muted small" style="text-align:center">Also accepted. The intended word was ${P.word.toUpperCase()}.</p>` : ''}
     ${!P.won ? `<p class="muted small" style="text-align:center">The word was ${P.word.toUpperCase()}.</p>` : ''}
-    <div class="trio"><div><b>${fmtTime(P.elapsed || 0)}</b><span>Time</span></div><div><b>${P.cutsPlaced}</b><span>Cuts</span></div><div><b>${third[1]}</b><span>${third[0]}</span></div></div>
+    ${P.won ? `<div class="score"><b>${o === 0 ? 'Par' : scoreLabel(o)}</b><span>${o === 0 ? 'Every cut was needed' : `${extra ? extra + ' extra ' + (extra === 1 ? 'cut' : 'cuts') : ''}${extra && (wrong || P.peeksUsed) ? ', ' : ''}${[wrong ? wrong + ' wrong ' + (wrong === 1 ? 'check' : 'checks') : '', P.peeksUsed ? P.peeksUsed + (P.peeksUsed === 1 ? ' peek' : ' peeks') : ''].filter(Boolean).join(', ')}`}</span></div>` : ''}
+    <div class="trio"><div><b>${fmtTime(P.elapsed || 0)}</b><span>Time</span></div><div><b>${P.cutsPlaced}</b><span>Cuts · par ${par}</span></div><div><b>${S.peeks && !S.live ? P.peeksUsed : P.attempts.length}</b><span>${S.peeks && !S.live ? 'Peeks' : 'Checks'}</span></div></div>
     ${P.pen ? `<p class="muted small" style="text-align:center;margin-top:-6px">Time includes +${P.pen}s for wrong checks.</p>` : ''}
     <button class="btn primary big" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>Share result</button>
     ${P.kind === 'daily' ? `<div class="next"><span class="muted">Next puzzle in</span><b id="countdown">--:--:--</b></div>` : `<button class="btn big" id="morePractice">Another practice puzzle</button>`}
-    ${P.kind === 'daily' ? `<div class="sect">${LEVELS[LEVEL].name} stats</div>` + statsHTML(P.won ? Math.round(P.elapsed / 1000) : undefined) : ''}
+    ${P.kind === 'daily' ? `<div class="sect">${LEVELS[LEVEL].name} stats</div>` + statsHTML(P.won ? Math.round(P.elapsed / 1000) : undefined, LEVEL, P.won ? overPar(P) : undefined) : ''}
     ${P.kind === 'daily' ? otherLevelsHTML() : ''}`;
   $('shareBtn').onclick = async () => {
     const txt = shareText();
@@ -707,11 +732,12 @@ function otherLevelsHTML() {
 function finish(won, wonWord) {
   P.done = true; P.won = won; P.wonWord = wonWord; P.elapsed = Date.now() - P.start + P.pen * 1000; P.level = levelName();
   if (won) P.cuts = [...cutsOf(wonWord)];
-  logResult(P.kind === 'daily' ? 'Daily' : 'Practice', P.word, won ? 'Solved' : 'Missed', P.attempts.length, P.cutsPlaced, P.elapsed, null, S.peeks && !S.live ? P.peeksUsed : '–');
+  logResult(P.kind === 'daily' ? 'Daily' : 'Practice', P.word, won ? `Solved ${scoreLabel(overPar(P))}` : 'Missed', P.attempts.length, P.cutsPlaced, P.elapsed, null, S.peeks && !S.live ? P.peeksUsed : '–');
+  if (won) { const o = overPar(P); trackLevel(`score-${o === 0 ? 'clean' : o === 1 ? 'plus1' : o === 2 ? 'plus2' : o === 3 ? 'plus3' : 'plus4up'}`); }
   if (won) { trackLevel('solve'); trackLevel(`time-${timeBucket(Math.round(P.elapsed / 1000))}`); if (!P.attempts.some(a => !a.win)) trackLevel('solve-first-check'); }
   else trackLevel('reveal');
   if (P.kind === 'daily') {
-    store.set(savedKey(), { word: P.word, wonWord, won, cuts: P.cutsPlaced, time: P.elapsed, attempts: P.attempts, peeks: P.peeksUsed, pen: P.pen, level: P.level });
+    store.set(savedKey(), { over: won ? overPar(P) : null, word: P.word, wonWord, won, cuts: P.cutsPlaced, time: P.elapsed, attempts: P.attempts, peeks: P.peeksUsed, pen: P.pen, level: P.level });
     recordStats(won, P.elapsed);
   }
   renderDaily();
@@ -737,7 +763,7 @@ function submitDaily() {
   P.attempts.push({ cuts: cutsArr, right, win, guess: { ...P.guess }, dRight });
   if (win) { finish(true, word); return; }
   P.pen += S.penalty || 0;
-  const penTxt = S.penalty ? ` +${S.penalty}s` : '';
+  const penTxt = S.penalty ? ` +1 and +${S.penalty}s` : ' +1';
   if (S.fb === 'lock') {
     cutsArr.forEach(c => P.ans.has(c) ? P.locked.add(c) : P.miss.add(c));
     P.cuts = [...P.locked];
@@ -862,7 +888,7 @@ function show(screen) {
 }
 function levelStatus(l) {
   const sv = store.get(savedKey(l), null);
-  if (sv) return sv.won ? `<span class="lv-done">✓ ${fmtTime(sv.time)}</span>` : `<span class="lv-miss">Revealed</span>`;
+  if (sv) return sv.won ? `<span class="lv-done">✓ ${sv.over === 0 ? 'Clean' : sv.over != null ? '+' + sv.over : ''} · ${fmtTime(sv.time)}</span>` : `<span class="lv-miss">Revealed</span>`;
   if (P && P.kind === 'daily' && l === LEVEL && P.cutsPlaced) return `<span class="lv-go">Continue</span>`;
   return `<span class="lv-go">Play</span>`;
 }
@@ -931,6 +957,8 @@ function setOpt(key, v) {
   applySettings();
 }
 function renderSettings() {
+  $('swClock').setAttribute('aria-checked', !!SHOWCLOCK());
+  $('swClock').onclick = () => { const v = !SHOWCLOCK(); store.set('sw-showclock', v); track(v ? 'pref-clock-on' : 'pref-clock-off', false); renderSettings(); if (P && !P.done) renderDaily(); };
   seg('segTheme', 'theme', [['system', 'Auto'], ['light', 'Light'], ['dark', 'Dark']], v => { THEME = v; store.set('sw-theme', v); applyTheme(); renderSettings(); });
   seg('segLevel', 'level', LEVEL_KEYS.map(k => [k, LEVELS[k].name]), v => { setLevel(v); startDaily(false); renderSettings(); renderHome(); });
   $('testNote').textContent = isTest(LEVEL) ? `${LEVELS[LEVEL].name} is using test settings. Its games won't count toward stats and show as "(test)".` : `${LEVELS[LEVEL].name} is on its standard settings.`;
@@ -980,6 +1008,7 @@ function initAnalytics() {
     if (days >= 7) track('active-week2plus');
   }
   track('active');
+  track(SHOWCLOCK() ? 'playing-with-clock' : 'playing-without-clock');
   const q = new URLSearchParams(location.search);
   if (q.get('s')) track('arrived-from-share');
   if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) track('opened-as-app');
